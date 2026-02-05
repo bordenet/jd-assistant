@@ -1,6 +1,6 @@
 /**
  * Views Module
- * Handles rendering different views for Strategic Proposal Generator
+ * Handles rendering different views for JD Assistant
  * @module views
  */
 
@@ -40,10 +40,10 @@ export async function renderProjectsList() {
   container.innerHTML = `
         <div class="mb-6 flex items-center justify-between">
             <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
-                My Proposals
+                My Job Descriptions
             </h2>
             <button id="new-project-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                + New Proposal
+                + New Job Description
             </button>
         </div>
 
@@ -51,13 +51,13 @@ export async function renderProjectsList() {
             <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
                 <span class="text-6xl mb-4 block">📋</span>
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    No proposals yet
+                    No job descriptions yet
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400 mb-6">
-                    Create your first strategic proposal for a dealership
+                    Create your first inclusive job description
                 </p>
                 <button id="new-project-btn-empty" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    + Create Your First Proposal
+                    + Create Your First Job Description
                 </button>
             </div>
         ` : `
@@ -73,7 +73,7 @@ export async function renderProjectsList() {
                         <div class="p-6">
                             <div class="flex items-start justify-between mb-3">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
-                                    ${escapeHtml(project.dealershipName || project.title)}
+                                    ${escapeHtml(project.jobTitle || project.title)}
                                 </h3>
                                 <div class="flex items-center space-x-2">
                                     ${isComplete ? `
@@ -93,14 +93,14 @@ export async function renderProjectsList() {
                             </div>
 
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                ${escapeHtml(project.dealershipLocation || '')} ${project.storeCount ? `• ${project.storeCount} stores` : ''}
+                                ${escapeHtml(project.companyName || '')} ${project.roleLevel ? `• ${escapeHtml(project.roleLevel)}` : ''} ${project.location ? `• ${escapeHtml(project.location)}` : ''}
                             </p>
 
                             <div class="mb-4">
                                 <div class="flex items-center space-x-2 mb-2">
-                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Phase ${Math.min(project.phase, 3)}/3</span>
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Phase ${Math.min(project.phase || 1, 3)}/3</span>
                                     <div class="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: ${Math.min((project.phase / 3) * 100, 100)}%"></div>
+                                        <div class="bg-blue-600 h-2 rounded-full transition-all" style="width: ${Math.min(((project.phase || 1) / 3) * 100, 100)}%"></div>
                                     </div>
                                 </div>
                                 <div class="flex space-x-1">
@@ -112,8 +112,8 @@ export async function renderProjectsList() {
 
                             <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                                 <span>Updated ${formatDate(project.updatedAt)}</span>
-                                <span class="px-2 py-1 rounded ${project.currentVendor ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200' : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'}">
-                                    ${project.currentVendor ? `vs ${escapeHtml(project.currentVendor)}` : 'New'}
+                                <span class="px-2 py-1 rounded bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                    ${project.phases ? Object.values(project.phases).filter(p => p.completed).length : 0}/3 complete
                                 </span>
                             </div>
                         </div>
@@ -148,7 +148,7 @@ export async function renderProjectsList() {
       if (project) {
         const markdown = getFinalMarkdown(project);
         if (markdown) {
-          showDocumentPreviewModal(markdown, 'Your Proposal is Ready', getExportFilename(project));
+          showDocumentPreviewModal(markdown, 'Your Job Description is Ready', getExportFilename(project));
         } else {
           showToast('No content to preview', 'warning');
         }
@@ -163,9 +163,9 @@ export async function renderProjectsList() {
       const projectId = btn.dataset.projectId;
       const project = projects.find(p => p.id === projectId);
 
-      if (await confirm('Delete Proposal', `Are you sure you want to delete the proposal for "${project.dealershipName || project.title}"?`, 'Delete', 'Cancel')) {
+      if (await confirm('Delete Job Description', `Are you sure you want to delete the job description for "${project.jobTitle || project.title}"?`, 'Delete', 'Cancel')) {
         await deleteProject(projectId);
-        showToast('Proposal deleted', 'success');
+        showToast('Job description deleted', 'success');
         renderProjectsList();
       }
     });
