@@ -351,6 +351,9 @@ export function showPromptModal(promptText, title = 'Full Prompt', onCopySuccess
 
 /**
  * Show confirmation dialog
+ * @param {string} message - Message to display (supports newlines)
+ * @param {string} title - Dialog title
+ * @returns {Promise<boolean>} True if confirmed, false if cancelled
  */
 export async function confirm(message, title = 'Confirm') {
   return new Promise((resolve) => {
@@ -359,7 +362,7 @@ export async function confirm(message, title = 'Confirm') {
     modal.innerHTML = `
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">${escapeHtml(title)}</h3>
-                <p class="text-gray-600 dark:text-gray-400 mb-6">${escapeHtml(message)}</p>
+                <p class="text-gray-600 dark:text-gray-400 mb-6 whitespace-pre-line">${escapeHtml(message)}</p>
                 <div class="flex justify-end space-x-3">
                     <button id="cancel-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                         Cancel
