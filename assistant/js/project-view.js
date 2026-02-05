@@ -561,10 +561,8 @@ function attachPhaseEventListeners(project, phase) {
       destructive: true,
       onClick: async () => {
         const confirmed = await confirm(
-          '🗑️ Delete Job Description?',
           'Are you sure you want to delete this job description? This cannot be undone.',
-          'Delete',
-          'Cancel'
+          'Delete Job Description'
         );
         if (confirmed) {
           await deleteProject(project.id);
