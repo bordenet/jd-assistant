@@ -58,7 +58,7 @@ export async function renderProjectView(projectId) {
   const project = await getProject(projectId);
 
   if (!project) {
-    showToast('Proposal not found', 'error');
+    showToast('Job description not found', 'error');
     navigateTo('home');
     return;
   }
@@ -70,7 +70,7 @@ export async function renderProjectView(projectId) {
                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
-                Back to Proposals
+                Back to Job Descriptions
             </button>
 
             <div class="flex items-start justify-between">
@@ -131,9 +131,9 @@ export async function renderProjectView(projectId) {
     exportBtn.addEventListener('click', () => {
       const markdown = getFinalMarkdown(project);
       if (markdown) {
-        showDocumentPreviewModal(markdown, 'Your Proposal is Ready', getExportFilename(project));
+        showDocumentPreviewModal(markdown, 'Your Job Description is Ready', getExportFilename(project));
       } else {
-        showToast('No proposal content to export', 'warning');
+        showToast('No job description content to export', 'warning');
       }
     });
   }
@@ -187,20 +187,17 @@ function renderPhaseContent(project, phaseNumber) {
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h4 class="text-lg font-semibold text-green-800 dark:text-green-300 flex items-center">
-                        <span class="mr-2">🎉</span> Your Proposal is Complete!
+                        <span class="mr-2">🎉</span> Your Job Description is Complete!
                     </h4>
                     <p class="text-green-700 dark:text-green-400 mt-1">
-                        <strong>Next steps:</strong> Preview & copy, then validate your document.
+                        <strong>Next steps:</strong> Preview & copy, then validate your job description.
                     </p>
                 </div>
                 <div class="flex gap-3 flex-wrap items-center">
                     <button id="export-complete-btn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg">
                         📄 Preview & Copy
                     </button>
-                    <button id="compare-phases-btn" class="px-4 py-2 border border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors font-medium">
-                        🔄 Compare Phases
-                    </button>
-                    <a href="https://bordenet.github.io/strategic-proposal/validator/" target="_blank" rel="noopener noreferrer" class="px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
+                    <a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
                         Full Validation ↗
                     </a>
                 </div>
@@ -208,14 +205,14 @@ function renderPhaseContent(project, phaseNumber) {
             <!-- Expandable Help Section -->
             <details class="mt-4">
                 <summary class="text-sm text-green-700 dark:text-green-400 cursor-pointer hover:text-green-800 dark:hover:text-green-300">
-                    Need help using your document?
+                    Need help using your job description?
                 </summary>
                 <div class="mt-3 p-4 bg-white dark:bg-gray-800 rounded-lg text-sm text-gray-700 dark:text-gray-300">
                     <ol class="list-decimal list-inside space-y-2">
-                        <li>Click <strong>"Preview & Copy"</strong> to see your formatted document</li>
+                        <li>Click <strong>"Preview & Copy"</strong> to see your formatted job description</li>
                         <li>Click <strong>"Copy Formatted Text"</strong> in the preview</li>
                         <li>Open <strong>Microsoft Word</strong> or <strong>Google Docs</strong> and paste</li>
-                        <li>Use <strong><a href="https://bordenet.github.io/strategic-proposal/validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Strategic Proposal Validator</a></strong> to score and improve your document</li>
+                        <li>Use <strong><a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">JD Validator</a></strong> to score and improve your job description</li>
                     </ol>
                     <p class="mt-3 text-gray-500 dark:text-gray-400 text-xs">
                         💡 The validator provides instant feedback and AI-powered suggestions for improvement.
@@ -453,14 +450,12 @@ function attachPhaseEventListeners(project, phase) {
     exportPhaseBtn.addEventListener('click', () => {
       const markdown = getFinalMarkdown(project);
       if (markdown) {
-        showDocumentPreviewModal(markdown, 'Your Proposal is Ready', getExportFilename(project));
+        showDocumentPreviewModal(markdown, 'Your Job Description is Ready', getExportFilename(project));
       } else {
-        showToast('No proposal content to export', 'warning');
+        showToast('No job description content to export', 'warning');
       }
     });
   }
-
-  // Compare phases button handler (shows diff with phase selectors)
   const comparePhasesBtn = document.getElementById('compare-phases-btn');
   if (comparePhasesBtn) {
     comparePhasesBtn.addEventListener('click', () => {
@@ -536,14 +531,14 @@ function attachPhaseEventListeners(project, phase) {
       destructive: true,
       onClick: async () => {
         const confirmed = await confirm(
-          '🗑️ Delete Proposal?',
-          'Are you sure you want to delete this proposal? This cannot be undone.',
+          '🗑️ Delete Job Description?',
+          'Are you sure you want to delete this job description? This cannot be undone.',
           'Delete',
           'Cancel'
         );
         if (confirmed) {
           await deleteProject(project.id);
-          showToast('Proposal deleted', 'success');
+          showToast('Job description deleted', 'success');
           navigateTo('');
         }
       }

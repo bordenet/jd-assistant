@@ -73,10 +73,10 @@ function setupGlobalEventListeners() {
     exportAllBtn.addEventListener('click', async () => {
       try {
         await exportAllProjects();
-        showToast('All proposals exported successfully!', 'success');
+        showToast('All job descriptions exported successfully!', 'success');
       } catch (error) {
         console.error('Export failed:', error);
-        showToast('Failed to export proposals', 'error');
+        showToast('Failed to export job descriptions', 'error');
       }
     });
   }
@@ -96,12 +96,12 @@ function setupGlobalEventListeners() {
             showLoading('Importing...');
             const count = await importProjects(file);
             hideLoading();
-            showToast(`Imported ${count} proposal${count > 1 ? 's' : ''} successfully!`, 'success');
+            showToast(`Imported ${count} job description${count > 1 ? 's' : ''} successfully!`, 'success');
             window.location.hash = '';
           } catch (error) {
             hideLoading();
             console.error('Import failed:', error);
-            showToast('Failed to import proposals. Please check the file format.', 'error');
+            showToast('Failed to import job descriptions. Please check the file format.', 'error');
           }
         }
       };
