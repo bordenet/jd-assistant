@@ -66,6 +66,7 @@ export async function createProject(formData) {
     title: formData.title || `JD - ${formData.jobTitle} at ${formData.companyName}`,
 
     // Role Basics
+    postingType: formData.postingType || 'external', // 'internal' | 'external'
     jobTitle: formData.jobTitle || '',
     companyName: formData.companyName || '',
     roleLevel: formData.roleLevel || '',

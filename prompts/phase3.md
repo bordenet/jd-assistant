@@ -2,6 +2,10 @@
 
 You are synthesizing a job description from an initial draft and adversarial review into the final, polished document.
 
+**Posting Type:** {{POSTING_TYPE}}
+
+> ⚠️ **INTERNAL POSTING NOTE:** If the Posting Type above is "internal", the final job description should NOT include compensation range or benefits details. Internal candidates already have access to this information through company systems. Omit the "What We Offer" section or limit it to non-compensation items like career growth opportunities.
+
 ## Context
 
 - **Phase 1**: Your initial draft (Claude Sonnet 4.5)
@@ -54,7 +58,7 @@ Before finalizing, eliminate ALL remaining issues:
 - **Inclusive language**: Gender-neutral, neurodiversity-friendly, no red flags
 - **Concrete responsibilities**: "Own X and ship Y per quarter" (not "various tasks")
 - **Specific requirements**: "3+ years with Python" (not "strong Python skills")
-- **Clear compensation**: "$170,000 - $220,000 base salary" (not "competitive")
+- **Clear compensation**: "$170,000 - $220,000 base salary" (not "competitive") **← SKIP FOR INTERNAL POSTINGS**
 - **Encouragement statement**: "If you meet 60-70% of qualifications, we encourage you to apply"
 - **Company info preserved**: Preamble and legal text exactly as provided
 
@@ -95,7 +99,7 @@ Run final checklist:
 - [ ] Zero red flag phrases
 - [ ] All responsibilities concrete and measurable
 - [ ] All requirements specific (not vague)
-- [ ] Compensation range included
+- [ ] Compensation range included **← SKIP FOR INTERNAL POSTINGS**
 - [ ] Includes "If you meet 60-70% of qualifications, we encourage you to apply"
 - [ ] 400-700 words
 - [ ] Company info preserved exactly

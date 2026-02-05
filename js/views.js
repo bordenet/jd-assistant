@@ -210,6 +210,23 @@ function getNewProjectFormHTML() {
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                             💼 Role Basics
                         </h3>
+
+                        <!-- Posting Type Toggle -->
+                        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Posting Type</label>
+                            <div class="flex items-center space-x-6">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="postingType" value="external" checked class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">External</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="postingType" value="internal" class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Internal</span>
+                                </label>
+                            </div>
+                            <p id="posting-type-hint" class="text-xs text-gray-500 dark:text-gray-400 mt-2 hidden">Internal postings don't require compensation or benefits information.</p>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="jobTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title <span class="text-red-500">*</span></label>
@@ -259,9 +276,9 @@ function getNewProjectFormHTML() {
                     </section>
 
                     <!-- Section 3: Compensation & Benefits -->
-                    <section>
+                    <section id="comp-benefits-section">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
-                            💰 Compensation & Benefits
+                            💰 Compensation & Benefits <span id="comp-optional-note" class="text-sm font-normal text-gray-500 dark:text-gray-400 hidden">(Optional for internal postings)</span>
                         </h3>
                         <div class="space-y-4">
                             <div>
@@ -343,6 +360,18 @@ function setupNewProjectFormListeners() {
   document.getElementById('back-btn')?.addEventListener('click', () => navigateTo('home'));
   document.getElementById('cancel-btn')?.addEventListener('click', () => navigateTo('home'));
 
+  // Posting type toggle - show/hide hints when switching between internal/external
+  const postingTypeRadios = document.querySelectorAll('input[name="postingType"]');
+  postingTypeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const isInternal = /** @type {HTMLInputElement} */ (e.target).value === 'internal';
+      const hint = document.getElementById('posting-type-hint');
+      const optionalNote = document.getElementById('comp-optional-note');
+      if (hint) hint.classList.toggle('hidden', !isInternal);
+      if (optionalNote) optionalNote.classList.toggle('hidden', !isInternal);
+    });
+  });
+
   // Form submission
   const form = document.getElementById('new-project-form');
   form?.addEventListener('submit', async (e) => {
@@ -402,6 +431,23 @@ function getEditProjectFormHTML(project) {
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                             💼 Role Basics
                         </h3>
+
+                        <!-- Posting Type Toggle -->
+                        <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Posting Type</label>
+                            <div class="flex items-center space-x-6">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="postingType" value="external" ${project.postingType !== 'internal' ? 'checked' : ''} class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">External</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="postingType" value="internal" ${project.postingType === 'internal' ? 'checked' : ''} class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Internal</span>
+                                </label>
+                            </div>
+                            <p id="posting-type-hint" class="text-xs text-gray-500 dark:text-gray-400 mt-2 ${project.postingType === 'internal' ? '' : 'hidden'}">Internal postings don't require compensation or benefits information.</p>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label for="jobTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title <span class="text-red-500">*</span></label>
@@ -451,9 +497,9 @@ function getEditProjectFormHTML(project) {
                     </section>
 
                     <!-- Section 3: Compensation & Benefits -->
-                    <section>
+                    <section id="comp-benefits-section">
                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
-                            💰 Compensation & Benefits
+                            💰 Compensation & Benefits <span id="comp-optional-note" class="text-sm font-normal text-gray-500 dark:text-gray-400 ${project.postingType === 'internal' ? '' : 'hidden'}">(Optional for internal postings)</span>
                         </h3>
                         <div class="space-y-4">
                             <div>
@@ -535,6 +581,18 @@ function getEditProjectFormHTML(project) {
 function setupEditProjectFormListeners(project) {
   document.getElementById('back-btn')?.addEventListener('click', () => navigateTo('project', project.id));
   document.getElementById('cancel-btn')?.addEventListener('click', () => navigateTo('project', project.id));
+
+  // Posting type toggle - show/hide hints when switching between internal/external
+  const postingTypeRadios = document.querySelectorAll('input[name="postingType"]');
+  postingTypeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const isInternal = /** @type {HTMLInputElement} */ (e.target).value === 'internal';
+      const hint = document.getElementById('posting-type-hint');
+      const optionalNote = document.getElementById('comp-optional-note');
+      if (hint) hint.classList.toggle('hidden', !isInternal);
+      if (optionalNote) optionalNote.classList.toggle('hidden', !isInternal);
+    });
+  });
 
   // Form submission
   const form = document.getElementById('edit-project-form');

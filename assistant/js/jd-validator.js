@@ -87,9 +87,16 @@ function validateJDContent(text) {
  * @param {string} text - The JD text to validate
  * @returns {Object} Validation result with score, grade, and feedback
  */
-export function validateJD(text) {
+/**
+ * Validate a job description and return a score
+ * @param {string} text - The job description text to validate
+ * @param {string} [postingType='external'] - Whether this is an 'internal' or 'external' posting
+ * @returns {Object} Validation result with score, grade, issues, and warnings
+ */
+export function validateJD(text, postingType = 'external') {
   let score = 100;
   const issues = [];
+  const isInternal = postingType === 'internal';
 
   const jdValidation = validateJDContent(text);
 
@@ -124,13 +131,15 @@ export function validateJD(text) {
     issues.push(`${redFlagCount} red flag phrase(s)`);
   }
 
-  // Compensation
-  const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
-                          /salary.*\$[\d,]+/i.test(text) ||
-                          /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
-  if (!hasCompensation) {
-    score -= 10;
-    issues.push('No compensation range');
+  // Compensation - skip for internal postings
+  if (!isInternal) {
+    const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
+                            /salary.*\$[\d,]+/i.test(text) ||
+                            /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
+    if (!hasCompensation) {
+      score -= 10;
+      issues.push('No compensation range');
+    }
   }
 
   // Encouragement statement

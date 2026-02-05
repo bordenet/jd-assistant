@@ -17,9 +17,14 @@
  */
 
 /**
+ * @typedef {'internal' | 'external'} PostingType
+ */
+
+/**
  * @typedef {Object} Project
  * @property {string} id - Unique identifier (UUID)
  * @property {string} title - Project title
+ * @property {PostingType} postingType - Whether this is an internal or external posting
  * @property {string} jobTitle - Job title
  * @property {string} companyName - Company name
  * @property {string} roleLevel - Role level (Junior, Mid, Senior, Staff, Principal)
@@ -47,6 +52,7 @@
 /**
  * @typedef {Object} ProjectFormData
  * @property {string} [title] - Optional title override
+ * @property {PostingType} [postingType] - Whether this is an internal or external posting
  * @property {string} jobTitle - Job title (required)
  * @property {string} companyName - Company name (required)
  * @property {string} [roleLevel] - Role level

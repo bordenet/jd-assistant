@@ -97,7 +97,10 @@ function replaceTemplateVars(template, vars) {
  */
 export async function generatePhase1Prompt(formData) {
   const template = await loadPromptTemplate(1);
+  const postingType = formData.postingType || 'external';
   return replaceTemplateVars(template, {
+    POSTING_TYPE: postingType,
+    IS_INTERNAL: postingType === 'internal' ? 'true' : 'false',
     JOB_TITLE: formData.jobTitle || '',
     COMPANY_NAME: formData.companyName || '',
     ROLE_LEVEL: formData.roleLevel || '',
@@ -124,7 +127,10 @@ export async function generatePhase1Prompt(formData) {
  */
 export async function generatePhase2Prompt(formData, phase1Output) {
   const template = await loadPromptTemplate(2);
+  const postingType = formData.postingType || 'external';
   return replaceTemplateVars(template, {
+    POSTING_TYPE: postingType,
+    IS_INTERNAL: postingType === 'internal' ? 'true' : 'false',
     JOB_TITLE: formData.jobTitle || '',
     COMPANY_NAME: formData.companyName || '',
     ROLE_LEVEL: formData.roleLevel || '',
@@ -141,7 +147,10 @@ export async function generatePhase2Prompt(formData, phase1Output) {
  */
 export async function generatePhase3Prompt(formData, phase1Output, phase2Output) {
   const template = await loadPromptTemplate(3);
+  const postingType = formData.postingType || 'external';
   return replaceTemplateVars(template, {
+    POSTING_TYPE: postingType,
+    IS_INTERNAL: postingType === 'internal' ? 'true' : 'false',
     JOB_TITLE: formData.jobTitle || '',
     COMPANY_NAME: formData.companyName || '',
     PHASE1_OUTPUT: phase1Output,

@@ -139,6 +139,7 @@ export class Workflow {
   async generatePrompt() {
     const p = this.project;
     const formData = {
+      postingType: p.postingType || 'external',
       jobTitle: p.jobTitle,
       companyName: p.companyName,
       roleLevel: p.roleLevel,

@@ -6,7 +6,7 @@
 
 import { getProject, updatePhase, updateProject, deleteProject } from './projects.js';
 import { getPhaseMetadata, generatePromptForPhase, getFinalMarkdown, getExportFilename, WORKFLOW_CONFIG, Workflow, detectPromptPaste } from './workflow.js';
-import { escapeHtml, showToast, copyToClipboard, copyToClipboardAsync, showPromptModal, confirm, showDocumentPreviewModal, createActionMenu } from './ui.js';
+import { escapeHtml, showToast, copyToClipboard, copyToClipboardAsync, showPromptModal, confirm, confirmWithRemember, showDocumentPreviewModal, createActionMenu } from './ui.js';
 import { navigateTo } from './router.js';
 import { preloadPromptTemplates } from './prompts.js';
 import { computeWordDiff, renderDiffHtml, getDiffStats } from './diff-view.js';
@@ -185,8 +185,8 @@ function renderPhaseContent(project, phaseNumber) {
   // Completion banner shown above Phase 3 content when phase is complete
   let completionBanner = '';
   if (phaseNumber === 3 && phaseData.completed) {
-    // Run validation on final JD
-    const validation = validateJD(phaseData.response || '');
+    // Run validation on final JD (pass postingType to skip comp check for internal)
+    const validation = validateJD(phaseData.response || '', project.postingType || 'external');
     const scoreDisplay = `<span class="text-2xl font-bold ${validation.colorClass}">${validation.score}</span><span class="text-sm text-gray-500 dark:text-gray-400">/100 (${validation.grade})</span>`;
     const issuesList = validation.issues.length > 0
       ? `<ul class="mt-2 text-sm text-yellow-700 dark:text-yellow-400 list-disc list-inside">${validation.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
@@ -224,7 +224,7 @@ function renderPhaseContent(project, phaseNumber) {
                         <li>Click <strong>"Preview & Copy"</strong> to see your formatted job description</li>
                         <li>Click <strong>"Copy Formatted Text"</strong> in the preview</li>
                         <li>Open <strong>Microsoft Word</strong> or <strong>Google Docs</strong> and paste</li>
-                        <li>Use <strong><a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">JD Validator</a></strong> to score and improve your job description</li>
+                        <li>Use <strong><a href="../validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">JD Validator</a></strong> to score and improve your job description</li>
                     </ol>
                     <p class="mt-3 text-gray-500 dark:text-gray-400 text-xs">
                         💡 The validator provides instant feedback and AI-powered suggestions for improvement.
@@ -332,28 +332,29 @@ function attachPhaseEventListeners(project, phase) {
 
   // CRITICAL: Safari transient activation fix - call copyToClipboardAsync synchronously
   copyPromptBtn?.addEventListener('click', async () => {
-    // Check if warning was previously acknowledged for THIS AI service
-    const aiService = meta?.aiModel || 'AI';
-    const warningKey = `external-ai-warning-acknowledged-${aiService.toLowerCase()}`;
-    const warningAcknowledged = localStorage.getItem(warningKey);
+    // Check if warning was previously acknowledged
+    const warningAcknowledged = localStorage.getItem('external-ai-warning-acknowledged');
 
     if (!warningAcknowledged) {
-      const confirmed = await confirm(
-        `You are about to copy a prompt that may contain proprietary data.\n\n` +
-                `• This prompt will be pasted into ${aiService}\n` +
-                `• Data sent to ${aiService} is processed on third-party servers\n` +
+      const result = await confirmWithRemember(
+        'You are about to copy a prompt that may contain proprietary data.\n\n' +
+                '• This prompt will be pasted into an external AI service (Claude/Gemini)\n' +
+                '• Data sent to these services is processed on third-party servers\n' +
                 '• For sensitive documents, use an internal tool like LibreGPT instead\n\n' +
                 'Do you want to continue?',
-        `⚠️ External AI Warning (${aiService})`
+        'External AI Warning',
+        { confirmText: 'Copy Prompt', cancelText: 'Cancel' }
       );
 
-      if (!confirmed) {
+      if (!result.confirmed) {
         showToast('Copy cancelled', 'info');
         return;
       }
 
-      // Remember the choice for this AI service
-      localStorage.setItem(warningKey, 'true');
+      // Remember the choice permanently if checkbox was checked
+      if (result.remember) {
+        localStorage.setItem('external-ai-warning-acknowledged', 'true');
+      }
     }
 
     // Now call clipboard synchronously with Promise - preserves transient activation
@@ -476,7 +477,7 @@ function attachPhaseEventListeners(project, phase) {
         await copyToClipboard(markdown);
         showToast('Document copied! Opening validator...', 'success');
         setTimeout(() => {
-          window.open('https://bordenet.github.io/jd-assistant/validator/', '_blank', 'noopener,noreferrer');
+          window.open('../validator/', '_blank', 'noopener,noreferrer');
         }, 500);
       } catch {
         showToast('Failed to copy. Please try again.', 'error');

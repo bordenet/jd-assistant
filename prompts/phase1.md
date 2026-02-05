@@ -8,6 +8,7 @@ You are an expert technical recruiter and hiring manager creating an inclusive, 
 **Company:** {{COMPANY_NAME}}
 **Level:** {{ROLE_LEVEL}}
 **Location/Remote:** {{LOCATION}}
+**Posting Type:** {{POSTING_TYPE}}
 
 ## Key Responsibilities
 {{RESPONSIBILITIES}}
@@ -21,6 +22,8 @@ You are an expert technical recruiter and hiring manager creating an inclusive, 
 ## Compensation & Benefits
 **Range:** {{COMPENSATION_RANGE}}
 **Benefits:** {{BENEFITS}}
+
+> ⚠️ **INTERNAL POSTING NOTE:** If the Posting Type above is "internal", do NOT include compensation range or benefits details in the job description. Internal candidates already have access to this information through company systems. Skip the "What We Offer" section entirely or limit it to non-compensation items like career growth opportunities.
 
 ## Additional Context
 **Tech Stack:** {{TECH_STACK}}
@@ -170,7 +173,7 @@ Before providing your response, verify:
 - [ ] Zero red flag phrases (like a family, passion required, etc.)
 - [ ] All responsibilities are concrete and measurable
 - [ ] All required qualifications are specific (not "strong X skills")
-- [ ] Compensation range is included and reasonable (30-50% spread)
+- [ ] Compensation range is included and reasonable (30-50% spread) **← SKIP FOR INTERNAL POSTINGS**
 - [ ] 400-700 words total
 - [ ] Includes "If you meet 60-70% of qualifications, we encourage you to apply"
 - [ ] Company preamble and legal text preserved exactly as provided
