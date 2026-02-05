@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Strategic Proposal Generator", () => {
+test.describe("JD Assistant", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate first, then clear storage
     await page.goto("/");
@@ -8,7 +8,7 @@ test.describe("Strategic Proposal Generator", () => {
     // Clear storage before each test
     await page.evaluate(() => {
       localStorage.clear();
-      indexedDB.deleteDatabase("strategic-proposal-db");
+      indexedDB.deleteDatabase("jd-assistant-db");
     });
 
     // Reload to apply cleared storage
@@ -17,7 +17,7 @@ test.describe("Strategic Proposal Generator", () => {
 
   test("should load the application", async ({ page }) => {
     const title = await page.title();
-    expect(title).toContain("Strategic Proposal");
+    expect(title).toContain("JD Assistant");
   });
 
   test("should display privacy notice on first load", async ({ page }) => {
@@ -125,7 +125,7 @@ test.describe("Strategic Proposal Generator", () => {
   test("should display correct header title", async ({ page }) => {
     const header = await page.locator("h1");
     const text = await header.textContent();
-    expect(text).toContain("Strategic Proposal");
+    expect(text).toContain("JD Assistant");
   });
 
   test("should have footer with links", async ({ page }) => {
@@ -144,7 +144,7 @@ test.describe("Strategic Proposal Generator", () => {
     await page.goto("/");
 
     const title = await page.title();
-    expect(title).toContain("Strategic Proposal");
+    expect(title).toContain("JD Assistant");
 
     await context.close();
   });

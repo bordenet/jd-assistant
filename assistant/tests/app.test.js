@@ -23,17 +23,17 @@ describe('App Module', () => {
     expect(document.getElementById('app-container')).toBeTruthy();
   });
 
-  test('should render empty proposals list', () => {
+  test('should render empty job descriptions list', () => {
     const container = document.getElementById('app-container');
     container.innerHTML = `
       <div class="text-center py-12">
-        <p class="text-gray-500 dark:text-gray-400 mb-6">No proposals yet</p>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">No job descriptions yet</p>
       </div>
     `;
-    expect(container.innerHTML).toContain('No proposals yet');
+    expect(container.innerHTML).toContain('No job descriptions yet');
   });
 
-  test('should handle creating new proposal', () => {
+  test('should handle creating new job description', () => {
     const newBtn = document.getElementById('new-project-btn');
     expect(newBtn).toBeTruthy();
   });

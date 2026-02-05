@@ -1,6 +1,6 @@
 /**
  * Workflow Module
- * Manages the 3-phase adversarial workflow for Strategic Proposal Generator
+ * Manages the 3-phase adversarial workflow for JD Assistant
  * @module workflow
  */
 
@@ -333,5 +333,5 @@ export function getFinalMarkdown(project) {
  * @returns {string} Filename with .md extension
  */
 export function getExportFilename(project) {
-  return `${(project.title || 'strategic-proposal').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-proposal.md`;
+  return `${(project.title || 'job-description').replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`;
 }

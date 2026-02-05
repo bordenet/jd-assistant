@@ -1,5 +1,5 @@
 /**
- * Type Definitions for Strategic Proposal Generator
+ * Type Definitions for JD Assistant
  *
  * This file contains JSDoc type definitions used across the application.
  * Import types using: @type {import('./types.js').TypeName}
@@ -123,7 +123,7 @@
 /**
  * @typedef {Object} Attachment
  * @property {string} id - Unique identifier (UUID)
- * @property {string} proposalId - ID of the parent proposal
+ * @property {string} projectId - ID of the parent project
  * @property {string} filename - Original filename
  * @property {string} content - Extracted text content
  * @property {number} size - File size in bytes

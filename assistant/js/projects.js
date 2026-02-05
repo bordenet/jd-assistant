@@ -1,6 +1,6 @@
 /**
  * Project Management Module
- * Handles proposal CRUD operations for Strategic Proposal Generator
+ * Handles project CRUD operations for JD Assistant
  * @module projects
  */
 
@@ -55,7 +55,7 @@ function extractTitleFromMarkdown(markdown) {
  */
 
 /**
- * Create a new proposal project with dealership-specific fields
+ * Create a new job description project
  * @param {import('./types.js').ProjectFormData} formData
  * @returns {Promise<import('./types.js').Project>}
  */
@@ -206,7 +206,7 @@ export async function exportProject(projectId) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `proposal-${sanitizeFilename(project.dealershipName)}.json`;
+  a.download = `jd-${sanitizeFilename(project.jobTitle || project.title)}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -230,7 +230,7 @@ export async function exportAllProjects() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `strategic-proposals-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.download = `jd-assistant-backup-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -284,7 +284,7 @@ export async function importProjects(file) {
  * @returns {string}
  */
 function sanitizeFilename(filename) {
-  return (filename || 'proposal')
+  return (filename || 'job-description')
     .replace(/[^a-z0-9]/gi, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')

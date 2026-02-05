@@ -1,6 +1,6 @@
 /**
  * Project Detail View Module
- * Handles rendering the proposal workflow view
+ * Handles rendering the job description workflow view
  * @module project-view
  */
 

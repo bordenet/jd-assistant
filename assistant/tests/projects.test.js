@@ -420,7 +420,7 @@ describe('Projects Module', () => {
     test('should include correct filename with date', async () => {
       await exportAllProjects();
 
-      expect(capturedDownloadName).toMatch(/^strategic-proposals-backup-\d{4}-\d{2}-\d{2}\.json$/);
+      expect(capturedDownloadName).toMatch(/^jd-assistant-backup-\d{4}-\d{2}-\d{2}\.json$/);
     });
   });
 

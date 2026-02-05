@@ -1,6 +1,6 @@
 /**
  * Views Module
- * Handles rendering different views for Strategic Proposal Generator
+ * Handles rendering different views for JD Assistant
  * @module views
  */
 
@@ -40,24 +40,24 @@ export async function renderProjectsList() {
   container.innerHTML = `
         <div class="mb-6 flex items-center justify-between">
             <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
-                My Proposals
+                My Job Descriptions
             </h2>
             <button id="new-project-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                + New Proposal
+                + New JD
             </button>
         </div>
 
         ${projects.length === 0 ? `
             <div class="text-center py-16 bg-white dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-                <span class="text-6xl mb-4 block">📋</span>
+                <span class="text-6xl mb-4 block">📝</span>
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                    No proposals yet
+                    No job descriptions yet
                 </h3>
                 <p class="text-gray-600 dark:text-gray-400 mb-6">
-                    Create your first strategic proposal for a dealership
+                    Create your first inclusive job description
                 </p>
                 <button id="new-project-btn-empty" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    + Create Your First Proposal
+                    + Create Your First JD
                 </button>
             </div>
         ` : `
@@ -73,7 +73,7 @@ export async function renderProjectsList() {
                         <div class="p-6">
                             <div class="flex items-start justify-between mb-3">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
-                                    ${escapeHtml(project.dealershipName || project.title)}
+                                    ${escapeHtml(project.jobTitle || project.title)}
                                 </h3>
                                 <div class="flex items-center space-x-2">
                                     ${isComplete ? `
@@ -93,7 +93,7 @@ export async function renderProjectsList() {
                             </div>
 
                             <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                ${escapeHtml(project.dealershipLocation || '')} ${project.storeCount ? `• ${project.storeCount} stores` : ''}
+                                ${escapeHtml(project.companyName || '')} ${project.roleLevel ? `• ${escapeHtml(project.roleLevel)}` : ''}
                             </p>
 
                             <div class="mb-4">
@@ -148,7 +148,7 @@ export async function renderProjectsList() {
       if (project) {
         const markdown = getFinalMarkdown(project);
         if (markdown) {
-          showDocumentPreviewModal(markdown, 'Your Proposal is Ready', getExportFilename(project));
+          showDocumentPreviewModal(markdown, 'Your Job Description is Ready', getExportFilename(project));
         } else {
           showToast('No content to preview', 'warning');
         }
@@ -163,9 +163,9 @@ export async function renderProjectsList() {
       const projectId = btn.dataset.projectId;
       const project = projects.find(p => p.id === projectId);
 
-      if (await confirm('Delete Proposal', `Are you sure you want to delete the proposal for "${project.dealershipName || project.title}"?`, 'Delete', 'Cancel')) {
+      if (await confirm('Delete Job Description', `Are you sure you want to delete the job description for "${project.jobTitle || project.title}"?`, 'Delete', 'Cancel')) {
         await deleteProject(projectId);
-        showToast('Proposal deleted', 'success');
+        showToast('Job description deleted', 'success');
         renderProjectsList();
       }
     });

@@ -23,8 +23,8 @@ describe('Storage Module', () => {
             expect(storage.db).not.toBeNull();
         });
 
-        it('should create proposals store', async () => {
-            expect(storage.db.objectStoreNames.contains('proposals')).toBe(true);
+        it('should create projects store', async () => {
+            expect(storage.db.objectStoreNames.contains('projects')).toBe(true);
         });
 
         it('should create settings store', async () => {
@@ -45,7 +45,7 @@ describe('Storage Module', () => {
             const project = {
                 id: 'test-1',
                 title: 'Test Project',
-                dealershipName: 'Acme Motors'
+                jobTitle: 'Senior Software Engineer'
             };
             const saved = await storage.saveProject(project);
             expect(saved.id).toBe('test-1');

@@ -1,17 +1,17 @@
 /**
  * IndexedDB Storage Module
- * Handles all client-side data persistence for Strategic Proposal Generator
+ * Handles all client-side data persistence for JD Assistant
  * @module storage
  */
 
 /** @type {string} */
-const DB_NAME = 'strategic-proposal-db';
+const DB_NAME = 'jd-assistant-db';
 
 /** @type {number} */
 const DB_VERSION = 1;
 
 /** @type {string} */
-const STORE_NAME = 'proposals';
+const STORE_NAME = 'projects';
 
 /**
  * Storage class for IndexedDB operations
@@ -38,13 +38,13 @@ class Storage {
         const target = /** @type {IDBOpenDBRequest} */ (event.target);
         const db = target.result;
 
-        // Proposals store
+        // Projects store
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
           store.createIndex('updatedAt', 'updatedAt', { unique: false });
           store.createIndex('title', 'title', { unique: false });
           store.createIndex('phase', 'phase', { unique: false });
-          store.createIndex('dealershipName', 'dealershipName', { unique: false });
+          store.createIndex('jobTitle', 'jobTitle', { unique: false });
         }
 
         // Prompts store
@@ -60,7 +60,7 @@ class Storage {
         // Attachments store (for PDF text content)
         if (!db.objectStoreNames.contains('attachments')) {
           const attachStore = db.createObjectStore('attachments', { keyPath: 'id' });
-          attachStore.createIndex('proposalId', 'proposalId', { unique: false });
+          attachStore.createIndex('projectId', 'projectId', { unique: false });
         }
       };
     });
