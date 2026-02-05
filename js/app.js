@@ -73,10 +73,10 @@ function setupGlobalEventListeners() {
     exportAllBtn.addEventListener('click', async () => {
       try {
         await exportAllProjects();
-        showToast('All job descriptions exported successfully!', 'success');
+        showToast('All proposals exported successfully!', 'success');
       } catch (error) {
         console.error('Export failed:', error);
-        showToast('Failed to export job descriptions', 'error');
+        showToast('Failed to export proposals', 'error');
       }
     });
   }
@@ -96,12 +96,12 @@ function setupGlobalEventListeners() {
             showLoading('Importing...');
             const count = await importProjects(file);
             hideLoading();
-            showToast(`Imported ${count} job description${count > 1 ? 's' : ''} successfully!`, 'success');
+            showToast(`Imported ${count} proposal${count > 1 ? 's' : ''} successfully!`, 'success');
             window.location.hash = '';
           } catch (error) {
             hideLoading();
             console.error('Import failed:', error);
-            showToast('Failed to import job descriptions. Please check the file format.', 'error');
+            showToast('Failed to import proposals. Please check the file format.', 'error');
           }
         }
       };
@@ -191,15 +191,14 @@ function showAboutModal() {
   modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
   modal.innerHTML = `
         <div class="bg-white dark:bg-gray-800 rounded-lg p-8 max-w-2xl shadow-xl">
-            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">📋 JD Assistant</h3>
+            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">📋 Strategic Proposal Generator</h3>
             <div class="text-gray-700 dark:text-gray-300 space-y-3 mb-6">
-                <p>Create inclusive job descriptions for software engineering positions using AI-assisted workflows.</p>
+                <p>Generate compelling strategic proposals using AI-assisted adversarial review.</p>
                 <p><strong>100% Client-Side:</strong> All your data is stored locally in your browser. Nothing is ever sent to any server.</p>
                 <p><strong>Privacy-First:</strong> No tracking, no analytics, no cookies (except preferences).</p>
-                <p><strong>Inclusive by Design:</strong> Built-in validator detects masculine-coded words, extrovert-bias phrases, and other red flags.</p>
             </div>
             <div class="flex justify-between items-center">
-                <a href="https://github.com/bordenet/jd-assistant" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">View on GitHub →</a>
+                <a href="https://github.com/bordenet/strategic-proposal" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">View on GitHub →</a>
                 <button type="button" id="close-about-btn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Close</button>
             </div>
         </div>
@@ -208,11 +207,6 @@ function showAboutModal() {
   document.body.appendChild(modal);
   modal.querySelector('#close-about-btn')?.addEventListener('click', () => modal.remove());
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-}
-
-// Check if privacy notice should be shown
-if (!localStorage.getItem('privacy-notice-dismissed')) {
-  document.getElementById('privacy-notice')?.classList.remove('hidden');
 }
 
 loadTheme();
