@@ -163,7 +163,7 @@ export async function renderProjectsList() {
       const projectId = btn.dataset.projectId;
       const project = projects.find(p => p.id === projectId);
 
-      if (await confirm('Delete Job Description', `Are you sure you want to delete the job description for "${project.jobTitle || project.title}"?`, 'Delete', 'Cancel')) {
+      if (await confirm(`Are you sure you want to delete the job description for "${project.jobTitle || project.title}"?`, 'Delete Job Description')) {
         await deleteProject(projectId);
         showToast('Job description deleted', 'success');
         renderProjectsList();
