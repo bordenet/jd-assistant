@@ -254,11 +254,13 @@ export async function importProjects(file) {
         let imported = 0;
 
         if (content.version && content.projects) {
+          // Backup format with multiple projects
           for (const project of content.projects) {
             await storage.saveProject(project);
             imported++;
           }
-        } else if (content.id && content.dealershipName) {
+        } else if (content.id && (content.jobTitle || content.companyName)) {
+          // Single JD project format
           await storage.saveProject(content);
           imported = 1;
         } else {

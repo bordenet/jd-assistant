@@ -91,13 +91,13 @@ function synthesizeProposal(project) {
 }
 
 /**
- * Export proposal as markdown file
- * @param {string} proposal - Proposal content
- * @param {string} [filename='proposal.md'] - Output filename
+ * Export job description as markdown file
+ * @param {string} proposal - Job description content
+ * @param {string} [filename='job-description.md'] - Output filename
  * @returns {void}
  */
-function exportAsMarkdown(proposal, filename = 'proposal.md') {
-  const attribution = '\n\n---\n\n*Generated with [Strategic Proposal Assistant](https://bordenet.github.io/strategic-proposal/)*';
+function exportAsMarkdown(proposal, filename = 'job-description.md') {
+  const attribution = '\n\n---\n\n*Generated with [JD Assistant](https://bordenet.github.io/jd-assistant/)*';
   const content = proposal + attribution;
   const blob = new Blob([content], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);

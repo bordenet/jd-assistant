@@ -242,9 +242,9 @@ export class Workflow {
      * @returns {string}
      */
   exportAsMarkdown() {
-    const attribution = '\n\n---\n\n*Generated with [Strategic Proposal Assistant](https://bordenet.github.io/strategic-proposal/)*';
+    const attribution = '\n\n---\n\n*Generated with [JD Assistant](https://bordenet.github.io/jd-assistant/)*';
 
-    let md = `# Strategic Proposal: ${this.project.dealershipName}\n\n`;
+    let md = `# Job Description: ${this.project.jobTitle}\n\n`;
     md += `**Created**: ${new Date(this.project.createdAt).toLocaleDateString()}\n`;
     md += `**Last Updated**: ${new Date(this.project.updatedAt).toLocaleDateString()}\n\n`;
 
