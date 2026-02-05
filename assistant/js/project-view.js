@@ -10,6 +10,7 @@ import { escapeHtml, showToast, copyToClipboard, copyToClipboardAsync, showPromp
 import { navigateTo } from './router.js';
 import { preloadPromptTemplates } from './prompts.js';
 import { computeWordDiff, renderDiffHtml, getDiffStats } from './diff-view.js';
+import { validateJD } from './jd-validator.js';
 
 /**
  * Extract title from markdown content (looks for # Title at the beginning)
@@ -58,7 +59,7 @@ export async function renderProjectView(projectId) {
   const project = await getProject(projectId);
 
   if (!project) {
-    showToast('Proposal not found', 'error');
+    showToast('Job description not found', 'error');
     navigateTo('home');
     return;
   }
@@ -70,7 +71,7 @@ export async function renderProjectView(projectId) {
                 <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
-                Back to Proposals
+                Back to Job Descriptions
             </button>
 
             <div class="flex items-start justify-between">
@@ -131,9 +132,9 @@ export async function renderProjectView(projectId) {
     exportBtn.addEventListener('click', () => {
       const markdown = getFinalMarkdown(project);
       if (markdown) {
-        showDocumentPreviewModal(markdown, 'Your Proposal is Ready', getExportFilename(project));
+        showDocumentPreviewModal(markdown, 'Your Job Description is Ready', getExportFilename(project));
       } else {
-        showToast('No proposal content to export', 'warning');
+        showToast('No job description content to export', 'warning');
       }
     });
   }
@@ -182,25 +183,33 @@ function renderPhaseContent(project, phaseNumber) {
   const color = colorMap[phaseNumber] || 'blue';
 
   // Completion banner shown above Phase 3 content when phase is complete
-  const completionBanner = phaseNumber === 3 && phaseData.completed ? `
+  let completionBanner = '';
+  if (phaseNumber === 3 && phaseData.completed) {
+    // Run validation on final JD
+    const validation = validateJD(phaseData.response || '');
+    const scoreDisplay = `<span class="text-2xl font-bold ${validation.colorClass}">${validation.score}</span><span class="text-sm text-gray-500 dark:text-gray-400">/100 (${validation.grade})</span>`;
+    const issuesList = validation.issues.length > 0
+      ? `<ul class="mt-2 text-sm text-yellow-700 dark:text-yellow-400 list-disc list-inside">${validation.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
+      : '<p class="mt-2 text-sm text-green-600 dark:text-green-400">✅ No issues found!</p>';
+
+    completionBanner = `
         <div class="mb-6 p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h4 class="text-lg font-semibold text-green-800 dark:text-green-300 flex items-center">
-                        <span class="mr-2">🎉</span> Your Proposal is Complete!
+                        <span class="mr-2">🎉</span> Your Job Description is Complete!
                     </h4>
-                    <p class="text-green-700 dark:text-green-400 mt-1">
-                        <strong>Next steps:</strong> Preview & copy, then validate your document.
-                    </p>
+                    <div class="mt-2 flex items-center gap-3">
+                        <span class="text-gray-600 dark:text-gray-400">Initial Score:</span>
+                        ${scoreDisplay}
+                    </div>
+                    ${issuesList}
                 </div>
                 <div class="flex gap-3 flex-wrap items-center">
                     <button id="export-complete-btn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg">
                         📄 Preview & Copy
                     </button>
-                    <button id="compare-phases-btn" class="px-4 py-2 border border-purple-600 text-purple-600 dark:border-purple-400 dark:text-purple-400 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors font-medium">
-                        🔄 Compare Phases
-                    </button>
-                    <a href="https://bordenet.github.io/strategic-proposal/validator/" target="_blank" rel="noopener noreferrer" class="px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
+                    <a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
                         Full Validation ↗
                     </a>
                 </div>
@@ -208,14 +217,14 @@ function renderPhaseContent(project, phaseNumber) {
             <!-- Expandable Help Section -->
             <details class="mt-4">
                 <summary class="text-sm text-green-700 dark:text-green-400 cursor-pointer hover:text-green-800 dark:hover:text-green-300">
-                    Need help using your document?
+                    Need help using your job description?
                 </summary>
                 <div class="mt-3 p-4 bg-white dark:bg-gray-800 rounded-lg text-sm text-gray-700 dark:text-gray-300">
                     <ol class="list-decimal list-inside space-y-2">
-                        <li>Click <strong>"Preview & Copy"</strong> to see your formatted document</li>
+                        <li>Click <strong>"Preview & Copy"</strong> to see your formatted job description</li>
                         <li>Click <strong>"Copy Formatted Text"</strong> in the preview</li>
                         <li>Open <strong>Microsoft Word</strong> or <strong>Google Docs</strong> and paste</li>
-                        <li>Use <strong><a href="https://bordenet.github.io/strategic-proposal/validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Strategic Proposal Validator</a></strong> to score and improve your document</li>
+                        <li>Use <strong><a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">JD Validator</a></strong> to score and improve your job description</li>
                     </ol>
                     <p class="mt-3 text-gray-500 dark:text-gray-400 text-xs">
                         💡 The validator provides instant feedback and AI-powered suggestions for improvement.
@@ -223,7 +232,8 @@ function renderPhaseContent(project, phaseNumber) {
                 </div>
             </details>
         </div>
-  ` : '';
+    `;
+  }
 
   return `
         ${completionBanner}
@@ -322,15 +332,17 @@ function attachPhaseEventListeners(project, phase) {
 
   // CRITICAL: Safari transient activation fix - call copyToClipboardAsync synchronously
   copyPromptBtn?.addEventListener('click', async () => {
-    // Check if warning was previously acknowledged - MUST happen before clipboard call
-    const warningAcknowledged = localStorage.getItem('external-ai-warning-acknowledged');
+    // Check if warning was previously acknowledged for THIS AI service
+    const aiService = meta?.aiModel || 'AI';
+    const warningKey = `external-ai-warning-acknowledged-${aiService.toLowerCase()}`;
+    const warningAcknowledged = localStorage.getItem(warningKey);
 
     if (!warningAcknowledged) {
       const confirmed = await confirm(
-        '⚠️ External AI Warning',
-        'You are about to copy a prompt that may contain proprietary data.\n\n' +
-                '• This prompt will be pasted into an external AI service (Claude/Gemini)\n' +
-                '• Data sent to these services is processed on third-party servers\n' +
+        `⚠️ External AI Warning (${aiService})`,
+        `You are about to copy a prompt that may contain proprietary data.\n\n` +
+                `• This prompt will be pasted into ${aiService}\n` +
+                `• Data sent to ${aiService} is processed on third-party servers\n` +
                 '• For sensitive documents, use an internal tool like LibreGPT instead\n\n' +
                 'Do you want to continue?',
         'Copy Anyway',
@@ -342,8 +354,8 @@ function attachPhaseEventListeners(project, phase) {
         return;
       }
 
-      // Remember the choice for this session
-      localStorage.setItem('external-ai-warning-acknowledged', 'true');
+      // Remember the choice for this AI service
+      localStorage.setItem(warningKey, 'true');
     }
 
     // Now call clipboard synchronously with Promise - preserves transient activation
@@ -451,14 +463,12 @@ function attachPhaseEventListeners(project, phase) {
     exportPhaseBtn.addEventListener('click', () => {
       const markdown = getFinalMarkdown(project);
       if (markdown) {
-        showDocumentPreviewModal(markdown, 'Your Proposal is Ready', getExportFilename(project));
+        showDocumentPreviewModal(markdown, 'Your Job Description is Ready', getExportFilename(project));
       } else {
-        showToast('No proposal content to export', 'warning');
+        showToast('No job description content to export', 'warning');
       }
     });
   }
-
-  // Compare phases button handler (shows diff with phase selectors)
   const comparePhasesBtn = document.getElementById('compare-phases-btn');
   if (comparePhasesBtn) {
     comparePhasesBtn.addEventListener('click', () => {
@@ -534,14 +544,14 @@ function attachPhaseEventListeners(project, phase) {
       destructive: true,
       onClick: async () => {
         const confirmed = await confirm(
-          '🗑️ Delete Proposal?',
-          'Are you sure you want to delete this proposal? This cannot be undone.',
+          '🗑️ Delete Job Description?',
+          'Are you sure you want to delete this job description? This cannot be undone.',
           'Delete',
           'Cancel'
         );
         if (confirmed) {
           await deleteProject(project.id);
-          showToast('Proposal deleted', 'success');
+          showToast('Job description deleted', 'success');
           navigateTo('');
         }
       }

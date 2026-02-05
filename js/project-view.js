@@ -10,6 +10,7 @@ import { escapeHtml, showToast, copyToClipboard, copyToClipboardAsync, showPromp
 import { navigateTo } from './router.js';
 import { preloadPromptTemplates } from './prompts.js';
 import { computeWordDiff, renderDiffHtml, getDiffStats } from './diff-view.js';
+import { validateJD } from './jd-validator.js';
 
 /**
  * Extract title from markdown content (looks for # Title at the beginning)
@@ -182,16 +183,27 @@ function renderPhaseContent(project, phaseNumber) {
   const color = colorMap[phaseNumber] || 'blue';
 
   // Completion banner shown above Phase 3 content when phase is complete
-  const completionBanner = phaseNumber === 3 && phaseData.completed ? `
+  let completionBanner = '';
+  if (phaseNumber === 3 && phaseData.completed) {
+    // Run validation on final JD
+    const validation = validateJD(phaseData.response || '');
+    const scoreDisplay = `<span class="text-2xl font-bold ${validation.colorClass}">${validation.score}</span><span class="text-sm text-gray-500 dark:text-gray-400">/100 (${validation.grade})</span>`;
+    const issuesList = validation.issues.length > 0
+      ? `<ul class="mt-2 text-sm text-yellow-700 dark:text-yellow-400 list-disc list-inside">${validation.issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
+      : '<p class="mt-2 text-sm text-green-600 dark:text-green-400">✅ No issues found!</p>';
+
+    completionBanner = `
         <div class="mb-6 p-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
             <div class="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h4 class="text-lg font-semibold text-green-800 dark:text-green-300 flex items-center">
                         <span class="mr-2">🎉</span> Your Job Description is Complete!
                     </h4>
-                    <p class="text-green-700 dark:text-green-400 mt-1">
-                        <strong>Next steps:</strong> Preview & copy, then validate your job description.
-                    </p>
+                    <div class="mt-2 flex items-center gap-3">
+                        <span class="text-gray-600 dark:text-gray-400">Initial Score:</span>
+                        ${scoreDisplay}
+                    </div>
+                    ${issuesList}
                 </div>
                 <div class="flex gap-3 flex-wrap items-center">
                     <button id="export-complete-btn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg">
@@ -220,7 +232,8 @@ function renderPhaseContent(project, phaseNumber) {
                 </div>
             </details>
         </div>
-  ` : '';
+    `;
+  }
 
   return `
         ${completionBanner}

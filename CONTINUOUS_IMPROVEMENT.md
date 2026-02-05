@@ -10,7 +10,7 @@
 ### 2026-02-05: Wrong Validator Scoring Dimensions
 
 **Severity**: CRITICAL
-**Status**: OPEN
+**Status**: FIXED (commit 69b8007)
 
 **What Happened**:
 The `validator/js/validator.js` file contains TWO validation functions:
@@ -53,7 +53,7 @@ But `validateDocument()` checks for code blocks and paragraph structure instead.
 ### 2026-02-05: Phase 4 Missing Initial Score
 
 **Severity**: HIGH
-**Status**: OPEN
+**Status**: FIXED (this commit)
 
 **What Happened**:
 When a job description is complete (Phase 3 done), the completion banner shows "Your Job Description is Complete!" but does NOT show an initial validation score.
@@ -135,8 +135,8 @@ The genesis CHECKLIST.md should include:
 
 ## Next Actions
 
-1. [ ] Fix `validateDocument()` to use JD-specific scoring
-2. [ ] Add initial score display to Phase 4 completion banner
-3. [ ] Add warning count and expandable list to completion banner
+1. [x] Fix `validateDocument()` to use JD-specific scoring ✅ (commit 69b8007)
+2. [x] Add initial score display to Phase 4 completion banner ✅
+3. [x] Add warning count and expandable list to completion banner ✅
 4. [ ] Update genesis CHECKLIST.md with domain-specific validation checks
 
