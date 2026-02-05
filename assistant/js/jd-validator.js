@@ -154,6 +154,73 @@ export function validateJD(text, postingType = 'external') {
   const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
   const colorClass = score >= 80 ? 'text-green-500' : score >= 60 ? 'text-yellow-500' : 'text-red-500';
 
-  return { score, grade, colorClass, issues, warnings: jdValidation.warnings };
+  // Add category breakdowns for inline quality score display
+  const categories = {
+    length: {
+      score: wordCount >= 400 && wordCount <= 700 ? 25 : Math.max(0, 25 - Math.min(15, Math.abs(wordCount - 550) / 20)),
+      maxScore: 25,
+      issues: wordCount < 400 ? [`Short (${wordCount} words)`] : wordCount > 700 ? [`Long (${wordCount} words)`] : []
+    },
+    inclusivity: {
+      score: Math.max(0, 25 - masculineCount * 5 - extrovertCount * 5),
+      maxScore: 25,
+      issues: [
+        ...jdValidation.warnings.filter(w => w.type === 'masculine-coded').map(w => `Masculine-coded: "${w.word}"`),
+        ...jdValidation.warnings.filter(w => w.type === 'extrovert-bias').map(w => `Extrovert-bias: "${w.phrase}"`)
+      ]
+    },
+    culture: {
+      score: Math.max(0, 25 - redFlagCount * 5),
+      maxScore: 25,
+      issues: jdValidation.warnings.filter(w => w.type === 'red-flag').map(w => `Red flag: "${w.phrase}"`)
+    },
+    transparency: {
+      score: (isInternal || /\$[\d,]+/.test(text) ? 15 : 0) + (hasEncouragement ? 10 : 0),
+      maxScore: 25,
+      issues: [
+        ...(!isInternal && !/\$[\d,]+/.test(text) ? ['No compensation range'] : []),
+        ...(!hasEncouragement ? ['Missing encouragement statement'] : [])
+      ]
+    }
+  };
+
+  return {
+    score,
+    totalScore: score, // Alias for consistency with other validators
+    grade,
+    colorClass,
+    issues,
+    warnings: jdValidation.warnings,
+    // Category breakdowns for inline quality score
+    length: categories.length,
+    inclusivity: categories.inclusivity,
+    culture: categories.culture,
+    transparency: categories.transparency
+  };
+}
+
+/**
+ * Get color class based on score
+ * @param {number} score - Score 0-100
+ * @returns {string} Color name for Tailwind classes
+ */
+export function getScoreColor(score) {
+  if (score >= 70) return 'green';
+  if (score >= 50) return 'yellow';
+  if (score >= 30) return 'orange';
+  return 'red';
+}
+
+/**
+ * Get label based on score
+ * @param {number} score - Score 0-100
+ * @returns {string} Human-readable label
+ */
+export function getScoreLabel(score) {
+  if (score >= 80) return 'Excellent';
+  if (score >= 70) return 'Ready';
+  if (score >= 50) return 'Needs Work';
+  if (score >= 30) return 'Draft';
+  return 'Incomplete';
 }
 
