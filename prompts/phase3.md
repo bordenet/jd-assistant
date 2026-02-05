@@ -99,6 +99,7 @@ Run final checklist:
 - [ ] Includes "If you meet 60-70% of qualifications, we encourage you to apply"
 - [ ] 400-700 words
 - [ ] Company info preserved exactly
+- [ ] **ZERO DUPLICATE CONTENT** - No redundancy between sections (looks unprofessional to candidates)
 
 ---
 

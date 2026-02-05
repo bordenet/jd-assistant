@@ -104,7 +104,7 @@ These phrases repel qualified candidates:
 
 ## Job Description Structure (400-700 words)
 
-Create a well-structured job description with these 6-7 sections:
+Create a well-structured job description with these sections:
 
 ```markdown
 # {{JOB_TITLE}}
@@ -136,6 +136,9 @@ Create a well-structured job description with these 6-7 sections:
 - **Growth:** {{CAREER_LADDER}}
 - **Team:** {{TEAM_SIZE}}
 
+## Other
+If there is additional context that doesn't fit cleanly into the sections above (e.g., role purpose, team mission, unique aspects of the position, working environment details), find a logical place to include an "Other" section. This section should capture any important information that would help candidates understand the role but doesn't belong in the standard sections.
+
 ## To Apply
 Clear call-to-action. Include:
 - How to apply (link, email)
@@ -145,6 +148,16 @@ Clear call-to-action. Include:
 ## [Optional] About {{COMPANY_NAME}}
 Brief company context if relevant.
 ```
+
+### ⚠️ CRITICAL: De-Duplication Rule
+
+**Redundant job descriptions look unprofessional to candidates.** Before finalizing:
+
+1. **Review all sections for duplicate content** - The same information should NOT appear in multiple sections
+2. **Consolidate overlapping content** - If "About the Role" mentions responsibilities, don't repeat them in "Key Responsibilities"
+3. **Each section has a unique purpose** - Don't pad sections by restating content from other sections
+4. **Tech stack appears ONCE** - Either in responsibilities OR qualifications, not both
+5. **Benefits appear ONCE** - In "What We Offer" only, not scattered throughout
 
 ---
 
@@ -161,6 +174,7 @@ Before providing your response, verify:
 - [ ] 400-700 words total
 - [ ] Includes "If you meet 60-70% of qualifications, we encourage you to apply"
 - [ ] Company preamble and legal text preserved exactly as provided
+- [ ] **NO DUPLICATE CONTENT** - Each section has unique content; no redundancy between sections
 
 ---
 
