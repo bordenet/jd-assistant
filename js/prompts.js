@@ -15,7 +15,7 @@ export const WORKFLOW_CONFIG = {
       icon: '📝',
       aiModel: 'Claude',
       aiUrl: 'https://claude.ai/new',
-      description: 'Generate initial proposal from dealership data and conversations'
+      description: 'Generate initial job description with inclusive language'
     },
     {
       number: 2,
@@ -23,7 +23,7 @@ export const WORKFLOW_CONFIG = {
       icon: '🔄',
       aiModel: 'Gemini',
       aiUrl: 'https://gemini.google.com/app',
-      description: 'Critique as a shrewd decision-maker evaluating the proposal'
+      description: 'Review for inclusive language and red flags'
     },
     {
       number: 3,
@@ -31,7 +31,7 @@ export const WORKFLOW_CONFIG = {
       icon: '✨',
       aiModel: 'Claude',
       aiUrl: 'https://claude.ai/new',
-      description: 'Synthesize critique into compelling final proposal'
+      description: 'Synthesize final inclusive job description'
     }
   ]
 };
