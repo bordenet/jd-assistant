@@ -322,15 +322,17 @@ function attachPhaseEventListeners(project, phase) {
 
   // CRITICAL: Safari transient activation fix - call copyToClipboardAsync synchronously
   copyPromptBtn?.addEventListener('click', async () => {
-    // Check if warning was previously acknowledged - MUST happen before clipboard call
-    const warningAcknowledged = localStorage.getItem('external-ai-warning-acknowledged');
+    // Check if warning was previously acknowledged for THIS AI service
+    const aiService = meta?.aiModel || 'AI';
+    const warningKey = `external-ai-warning-acknowledged-${aiService.toLowerCase()}`;
+    const warningAcknowledged = localStorage.getItem(warningKey);
 
     if (!warningAcknowledged) {
       const confirmed = await confirm(
-        '⚠️ External AI Warning',
-        'You are about to copy a prompt that may contain proprietary data.\n\n' +
-                '• This prompt will be pasted into an external AI service (Claude/Gemini)\n' +
-                '• Data sent to these services is processed on third-party servers\n' +
+        `⚠️ External AI Warning (${aiService})`,
+        `You are about to copy a prompt that may contain proprietary data.\n\n` +
+                `• This prompt will be pasted into ${aiService}\n` +
+                `• Data sent to ${aiService} is processed on third-party servers\n` +
                 '• For sensitive documents, use an internal tool like LibreGPT instead\n\n' +
                 'Do you want to continue?',
         'Copy Anyway',
@@ -342,8 +344,8 @@ function attachPhaseEventListeners(project, phase) {
         return;
       }
 
-      // Remember the choice for this session
-      localStorage.setItem('external-ai-warning-acknowledged', 'true');
+      // Remember the choice for this AI service
+      localStorage.setItem(warningKey, 'true');
     }
 
     // Now call clipboard synchronously with Promise - preserves transient activation
