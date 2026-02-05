@@ -1,110 +1,116 @@
-# ✨ JD Assistant
+# JD Assistant
 
-Create effective job descriptions for software engineering positions.
+Write inclusive job descriptions for software engineering positions. Three phases: draft, review, refine.
+
+[![Star this repo](https://img.shields.io/github/stars/bordenet/jd-assistant?style=social)](https://github.com/bordenet/jd-assistant)
+
+**Try it**: [Assistant](https://bordenet.github.io/jd-assistant/) · [Validator](https://bordenet.github.io/jd-assistant/validator/)
+
+> **Why this matters**: Research shows masculine-coded language in job descriptions reduces female applicants by up to 50%. This tool helps you write JDs that attract diverse candidates by flagging problematic language and suggesting inclusive alternatives.
+
+[![CI](https://github.com/bordenet/jd-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/bordenet/jd-assistant/actions)
+[![codecov](https://codecov.io/gh/bordenet/jd-assistant/branch/main/graph/badge.svg)](https://codecov.io/gh/bordenet/jd-assistant)
 
 ---
 
 ## Quick Start
 
+1. Open the [demo](https://bordenet.github.io/jd-assistant/)
+2. Enter job title, responsibilities, requirements, compensation
+3. Copy prompt → paste into Claude → paste response back
+4. Repeat for review (Gemini) and synthesis (Claude)
+5. Export as Markdown
+
+## What It Does
+
+- **Draft → Review → Synthesize**: Claude writes, Gemini critiques for inclusivity, Claude refines
+- **Inclusive language checks**: Flags masculine-coded words, extrovert-bias, red flag phrases
+- **Browser storage**: Data stays in IndexedDB, nothing leaves your machine
+- **No login**: Just open and use
+
+## How the Phases Work
+
+**Phase 1** — You provide job details. Claude drafts an inclusive JD following research-backed guidelines.
+
+**Phase 2** — Gemini reviews for: masculine-coded words (aggressive, ninja, rockstar), extrovert-bias (outgoing, high-energy), red flags (fast-paced, like a family), and requirements reasonableness.
+
+**Phase 3** — Claude synthesizes the final JD incorporating valid critique, with a zero-tolerance sweep for problematic language.
+
+## Validator
+
+The [Validator](https://bordenet.github.io/jd-assistant/validator/) checks any JD for:
+- 17 masculine-coded words with neutral alternatives
+- 8 extrovert-bias phrases
+- 15 red flag phrases signaling toxic culture
+- Relaxed validation for company-mandated EEO/legal sections
+
+---
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Setup
+
 ```bash
+git clone https://github.com/bordenet/jd-assistant.git
+cd jd-assistant
 npm install
-npm test        # Unit tests for both assistant and validator
-open index.html # Assistant UI
-open validator/index.html # Validator UI
+```
+
+### Testing
+
+```bash
+npm test        # Run all tests
+npm run lint    # Run linting
+npm run lint:fix # Fix lint issues
+```
+
+### Local Development
+
+```bash
+npm run serve   # Start local server at http://localhost:8000
 ```
 
 ---
 
-## What This Is
-
-A 3-phase AI workflow application for creating high-quality job descriptions for software engineering roles. Uses the adversarial workflow pattern (Claude → Gemini → Claude) to produce better results.
-
-Every project has a **paired architecture**:
-
-- **assistant/** - 3-phase AI workflow for creating job descriptions
-- **validator/** - Job description quality checker
-
-Part of the [genesis-tools](https://github.com/bordenet/genesis) ecosystem.
-
----
-
-## Directory Structure
+## Project Structure
 
 ```
 jd-assistant/
-├── index.html              # Root (mirrors assistant/index.html)
-├── js/                     # Root JS (mirrors assistant/js/)
-├── css/                    # Root CSS (mirrors assistant/css/)
-├── assistant/              # Document creation tool
-│   ├── index.html          # Main assistant UI
-│   ├── js/                 # Source files
-│   │   ├── app.js          # Entry point
-│   │   ├── workflow.js     # Phase logic
-│   │   ├── storage.js      # IndexedDB
-│   │   ├── router.js       # Client-side routing
-│   │   ├── error-handler.js    # Error display (MUST_MATCH)
-│   │   ├── same-llm-adversarial.js  # LLM adversarial (MUST_MATCH)
-│   │   └── ai-mock.js      # Mock responses
-│   ├── css/styles.css      # Styles
-│   └── tests/              # Jest unit tests
-├── validator/              # Document validation tool
-│   ├── index.html          # Validator UI
-│   ├── js/                 # Validator source
-│   │   ├── app.js          # Entry point
-│   │   └── validator.js    # Validation logic
-│   ├── css/styles.css      # Styles
-│   ├── tests/              # Jest unit tests
-│   └── testdata/           # Test fixtures
-├── e2e/                    # Playwright E2E tests
-├── scripts/lib/            # Shell utilities
-├── package.json
-├── jest.config.js
-├── playwright.config.js
-└── eslint.config.js
+├── js/                    # JavaScript modules
+│   ├── app.js            # Main application entry
+│   ├── workflow.js       # Phase orchestration
+│   ├── storage.js        # IndexedDB operations
+│   └── ...
+├── tests/                 # Jest test files
+├── prompts/              # AI prompt templates
+│   ├── phase1.md
+│   ├── phase2.md
+│   └── phase3.md
+├── validator/            # JD validation tool
+│   └── js/validator.js   # Inclusive language checks
+└── index.html            # Main HTML file
 ```
 
-**Note**: Root `index.html`, `js/`, and `css/` mirror `assistant/` for backward compatibility.
+## Part of Genesis Tools
 
----
+Built with [Genesis](https://github.com/bordenet/genesis). Related tools:
 
-## MUST_MATCH Files
+- [One-Pager](https://github.com/bordenet/one-pager)
+- [JD Assistant](https://github.com/bordenet/jd-assistant)
+- [Power Statement Assistant](https://github.com/bordenet/power-statement-assistant)
+- [PR/FAQ Assistant](https://github.com/bordenet/pr-faq-assistant)
+- [Product Requirements Assistant](https://github.com/bordenet/product-requirements-assistant)
+- [Strategic Proposal](https://github.com/bordenet/strategic-proposal)
 
-These files must be identical across all 7 projects:
+## Contributing
 
-| File | Purpose |
-|------|---------|
-| `js/error-handler.js` | Error display |
-| `js/same-llm-adversarial.js` | Same-LLM adversarial mode |
-| `scripts/lib/compact.sh` | Shell output utilities |
-| `scripts/lib/symlinks.sh` | Symlink handling |
-| `AGENT.md` | AI agent instructions |
-| `CODEX.md` | OpenAI Codex instructions |
-| `COPILOT.md` | GitHub Copilot instructions |
-| `GEMINI.md` | Google Gemini instructions |
-| `ADOPT-PROMPT.md` | AI adoption prompt |
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-Run `project-diff --ci` to verify consistency.
+## License
 
----
-
-## Testing
-
-```bash
-npm test              # All 170 tests
-npm run test:unit     # Unit tests only
-npm run test:e2e      # E2E tests only
-npm run test:coverage # With coverage
-```
-
----
-
-## Related Projects
-
-All derived from this template:
-
-- [one-pager](https://github.com/bordenet/one-pager)
-- [product-requirements-assistant](https://github.com/bordenet/product-requirements-assistant)
-- [architecture-decision-record](https://github.com/bordenet/architecture-decision-record)
-- [strategic-proposal](https://github.com/bordenet/strategic-proposal)
-- [power-statement-assistant](https://github.com/bordenet/power-statement-assistant)
-- [pr-faq-assistant](https://github.com/bordenet/pr-faq-assistant)
+MIT - See [LICENSE](LICENSE)
