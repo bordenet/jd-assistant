@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { describe, it, expect } from '@jest/globals';
-import { validateDocument, getGrade, getScoreColor } from '../js/validator.js';
+import { validateDocument, getGrade, getScoreColor, validateJDContent } from '../js/validator.js';
 
 describe('validateDocument', () => {
   it('should return low score for very short documents', () => {
@@ -136,5 +136,93 @@ describe('getScoreColor', () => {
   it('should return red for low scores', () => {
     expect(getScoreColor(0)).toBe('text-red-400');
     expect(getScoreColor(39)).toBe('text-red-400');
+  });
+});
+
+describe('JD Validator - Inclusive Language', () => {
+  it('flags masculine-coded words', () => {
+    const result = validateJDContent('Looking for an aggressive rockstar ninja');
+    expect(result.warnings.some(w => w.type === 'masculine-coded')).toBe(true);
+    expect(result.valid).toBe(false);
+  });
+
+  it('flags multiple masculine-coded words', () => {
+    const result = validateJDContent('We need a dominant, driven, fearless leader');
+    const masculineWarnings = result.warnings.filter(w => w.type === 'masculine-coded');
+    expect(masculineWarnings.length).toBeGreaterThan(0);
+  });
+
+  it('flags extrovert-only signals', () => {
+    const result = validateJDContent('Must be outgoing and high-energy');
+    expect(result.warnings.some(w => w.type === 'extrovert-bias')).toBe(true);
+    expect(result.valid).toBe(false);
+  });
+
+  it('flags red flag phrases', () => {
+    const result = validateJDContent('Fast-paced environment, we are like a family');
+    expect(result.warnings.some(w => w.type === 'red-flag')).toBe(true);
+    expect(result.valid).toBe(false);
+  });
+
+  it('flags multiple red flag phrases', () => {
+    const result = validateJDContent('Hustle culture, wear many hats, always-on mentality');
+    const redFlagWarnings = result.warnings.filter(w => w.type === 'red-flag');
+    expect(redFlagWarnings.length).toBeGreaterThan(0);
+  });
+
+  it('does NOT flag company-mandated preamble sections', () => {
+    const jd = `
+      [COMPANY_PREAMBLE]
+      We are an aggressive equal opportunity employer...
+      [/COMPANY_PREAMBLE]
+      Regular content here.
+    `;
+    const result = validateJDContent(jd);
+    // Should not flag "aggressive" since it's in company preamble
+    expect(result.warnings.filter(w => w.word === 'aggressive' || w.phrase === 'aggressive')).toHaveLength(0);
+  });
+
+  it('does NOT flag company-mandated legal text sections', () => {
+    const jd = `
+      [COMPANY_LEGAL_TEXT]
+      This is a fast-paced company with aggressive growth targets.
+      [/COMPANY_LEGAL_TEXT]
+      We are looking for collaborative engineers.
+    `;
+    const result = validateJDContent(jd);
+    // Should not flag "fast-paced" or "aggressive" since they're in legal text
+    const flaggedInLegal = result.warnings.filter(w =>
+      (w.word === 'fast-paced' || w.phrase === 'fast-paced' ||
+       w.word === 'aggressive' || w.phrase === 'aggressive')
+    );
+    expect(flaggedInLegal).toHaveLength(0);
+  });
+
+  it('returns valid=true when no issues found', () => {
+    const result = validateJDContent('We are looking for a collaborative engineer');
+    expect(result.valid).toBe(true);
+    expect(result.warnings.length).toBe(0);
+  });
+
+  it('is case-insensitive', () => {
+    const result1 = validateJDContent('Looking for an AGGRESSIVE developer');
+    const result2 = validateJDContent('Looking for an aggressive developer');
+    expect(result1.warnings.length).toBe(result2.warnings.length);
+  });
+
+  it('returns warnings with type, word/phrase, and suggestion', () => {
+    const result = validateJDContent('We need a rockstar ninja');
+    expect(result.warnings.length).toBeGreaterThan(0);
+    const warning = result.warnings[0];
+    expect(warning).toHaveProperty('type');
+    expect(warning).toHaveProperty('word');
+    expect(warning).toHaveProperty('suggestion');
+  });
+
+  it('avoids false positives with word boundaries', () => {
+    const result = validateJDContent('We are a team of steamship engineers');
+    // Should not flag "team" in "steamship"
+    const teamWarnings = result.warnings.filter(w => w.word === 'team' || w.phrase === 'team');
+    expect(teamWarnings).toHaveLength(0);
   });
 });
