@@ -212,11 +212,11 @@ function getNewProjectFormHTML() {
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="jobTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title *</label>
+                                <label for="jobTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title <span class="text-red-500">*</span></label>
                                 <input type="text" id="jobTitle" name="jobTitle" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., Senior Software Engineer">
                             </div>
                             <div>
-                                <label for="companyName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name *</label>
+                                <label for="companyName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name <span class="text-red-500">*</span></label>
                                 <input type="text" id="companyName" name="companyName" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., Acme Corp">
                             </div>
                             <div>
