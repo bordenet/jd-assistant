@@ -53,7 +53,7 @@ for pattern in "${PATTERNS[@]}"; do
     if matches=$(grep -r -i -E "$pattern" . $EXCLUDE_DIRS $EXCLUDE_FILES $GREP_OPTS 2>/dev/null || true); then
         if [[ -n "$matches" ]]; then
             # Filter out mock/test/example/placeholder patterns and env var references
-            filtered_matches=$(echo "$matches" | grep -v -E "(mock|test|example|demo|fake|dummy|sample|placeholder|your-|YOUR_|\\\$[A-Z_]+|\[HIDDEN\]|\[type=|semgrep|codacy)" || true)
+            filtered_matches=$(echo "$matches" | grep -v -E "(mock|test|example|demo|fake|dummy|sample|placeholder|your-|YOUR_|\\\$[A-Z_]+|\[HIDDEN\]|\[type=|semgrep|codacy|TOKEN_HERE|KEY_HERE|SECRET_HERE|_HERE\")" || true)
             if [[ -n "$filtered_matches" ]]; then
                 echo ""
                 echo -e "${C_RED}⚠ Potential secret found (pattern: ${pattern:0:30}...):${C_RESET}"
