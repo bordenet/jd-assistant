@@ -5,85 +5,100 @@ import { describe, it, expect } from '@jest/globals';
 import { validateDocument, getGrade, getScoreColor, validateJDContent } from '../js/validator.js';
 
 describe('validateDocument', () => {
-  it('should return low score for very short documents', () => {
+  // Helper to create a well-formed JD
+  const createGoodJD = (overrides = {}) => {
+    const base = `# Senior Software Engineer
+
+## About the Role
+Join our collaborative team to build scalable systems.
+
+## Key Responsibilities
+- Own the authentication service and ship 2 features per quarter
+- Mentor junior engineers through code reviews
+- Collaborate with product teams on technical decisions
+
+## Required Qualifications
+- 3+ years experience with Python or Go
+- Experience with distributed systems
+- Proficiency in SQL databases
+
+## Preferred Qualifications
+- Experience with Kubernetes
+- Open source contributions
+
+## What We Offer
+- Compensation: $170,000 - $220,000 base salary
+- Benefits: Health, dental, 401k match
+- Remote-first culture
+
+## To Apply
+Submit your resume. If you meet 60-70% of these qualifications, we encourage you to apply.
+`;
+    return overrides.text || base;
+  };
+
+  it('should return high score for well-formed JD', () => {
+    const result = validateDocument(createGoodJD());
+    expect(result.score).toBeGreaterThanOrEqual(80);
+    expect(result.grade).toMatch(/[AB]/);
+  });
+
+  it('should penalize very short documents', () => {
     const result = validateDocument('Hello world');
-    expect(result.score).toBeLessThan(50);
+    expect(result.score).toBeLessThan(80);
     expect(result.wordCount).toBe(2);
   });
 
-  it('should return higher score for longer documents', () => {
-    const longText = 'This is a longer document. '.repeat(20);
+  it('should penalize documents that are too long', () => {
+    const longText = createGoodJD() + '\n\n' + 'Additional content here with more words. '.repeat(150);
     const result = validateDocument(longText);
-    expect(result.score).toBeGreaterThanOrEqual(25);
+    expect(result.wordCount).toBeGreaterThan(700);
+    // Should still have a reasonable score but with length penalty
+    expect(result.feedback.some(f => f.includes('Long'))).toBe(true);
   });
 
-  it('should give bonus for headings', () => {
-    const withHeading = '# Title\n\nSome content here.';
-    const withoutHeading = 'Some content here.';
-
-    const resultWith = validateDocument(withHeading);
-    const resultWithout = validateDocument(withoutHeading);
-
-    expect(resultWith.score).toBeGreaterThan(resultWithout.score);
+  it('should penalize masculine-coded words', () => {
+    const badJD = createGoodJD().replace('collaborative', 'aggressive rockstar ninja');
+    const result = validateDocument(badJD);
+    expect(result.warningCount).toBeGreaterThan(0);
+    expect(result.warnings.some(w => w.type === 'masculine-coded')).toBe(true);
   });
 
-  it('should give bonus for multiple paragraphs', () => {
-    const multiPara = 'Paragraph one.\n\nParagraph two.\n\nParagraph three.';
-    const singlePara = 'Just one paragraph with all the content.';
-
-    const resultMulti = validateDocument(multiPara);
-    const resultSingle = validateDocument(singlePara);
-
-    expect(resultMulti.paragraphCount).toBe(3);
-    expect(resultSingle.paragraphCount).toBe(1);
+  it('should penalize missing compensation range', () => {
+    const noComp = createGoodJD().replace('$170,000 - $220,000', 'Competitive salary');
+    const result = validateDocument(noComp);
+    expect(result.feedback.some(f => f.includes('compensation'))).toBe(true);
   });
 
-  it('should give bonus for lists', () => {
-    const withList = '- Item 1\n- Item 2\n- Item 3';
-    const withoutList = 'No lists here.';
-
-    const resultWith = validateDocument(withList);
-    const resultWithout = validateDocument(withoutList);
-
-    expect(resultWith.score).toBeGreaterThan(resultWithout.score);
-  });
-
-  it('should give bonus for code blocks', () => {
-    const withCode = 'Here is some `inline code` example.';
-    const withoutCode = 'Here is some text example.';
-
-    const resultWith = validateDocument(withCode);
-    const resultWithout = validateDocument(withoutCode);
-
+  it('should reward encouragement statement', () => {
+    const withEncouragement = createGoodJD();
+    const withoutEncouragement = createGoodJD().replace(
+      'If you meet 60-70% of these qualifications, we encourage you to apply.',
+      'Apply now.'
+    );
+    const resultWith = validateDocument(withEncouragement);
+    const resultWithout = validateDocument(withoutEncouragement);
     expect(resultWith.score).toBeGreaterThan(resultWithout.score);
   });
 
   it('should cap score at 100', () => {
-    // Create a document with all bonus features
-    const maxDoc = `# Title
-
-This is a longer document with multiple paragraphs and good structure.
-
-## Section One
-
-Here are some key points:
-- Point one with details
-- Point two with more details
-- Point three completing the list
-
-## Section Two
-
-And here is some \`code\` to demonstrate:
-
-\`\`\`javascript
-console.log('JD Assistant');
-\`\`\`
-
-The document continues with more content to reach the word count threshold.
-`.repeat(3);
-
-    const result = validateDocument(maxDoc);
+    const result = validateDocument(createGoodJD());
     expect(result.score).toBeLessThanOrEqual(100);
+  });
+
+  it('should floor score at 0', () => {
+    // Create a terrible JD with all problems
+    const terribleJD = 'aggressive ninja rockstar fast-paced hustle grind';
+    const result = validateDocument(terribleJD);
+    expect(result.score).toBeGreaterThanOrEqual(0);
+  });
+
+  it('should return warnings array from JD content validation', () => {
+    const badJD = 'Looking for an aggressive rockstar in a fast-paced environment';
+    const result = validateDocument(badJD);
+    expect(result.warnings).toBeDefined();
+    expect(Array.isArray(result.warnings)).toBe(true);
+    expect(result.warningCount).toBe(result.warnings.length);
   });
 });
 

@@ -1,76 +1,123 @@
 /**
  * JD Validator - Validation Logic
  *
- * Simple document validation demonstrating the validator pattern.
+ * Validates job descriptions for inclusive language, structure, and best practices.
+ * Based on research from JD-RESEARCH-2025.md.
  */
 
 /**
- * Validate a document and return a score with feedback
- * @param {string} text - The document text to validate
+ * Validate a job description and return a score with feedback
+ * @param {string} text - The JD text to validate
  * @returns {Object} Validation result with score, grade, and feedback
  */
 export function validateDocument(text) {
   const feedback = [];
-  let score = 0;
+  let score = 100; // Start at 100, deduct for issues
+  const deductions = [];
 
-  // Check document length
+  // Get JD content validation (inclusive language, red flags)
+  const jdValidation = validateJDContent(text);
+
+  // 1. Check word count (ideal: 400-700 words)
   const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-  if (wordCount >= 100) {
-    score += 25;
-    feedback.push(`Good length: ${wordCount} words`);
-  } else if (wordCount >= 50) {
-    score += 15;
-    feedback.push(`Moderate length: ${wordCount} words (aim for 100+)`);
+  if (wordCount >= 400 && wordCount <= 700) {
+    feedback.push(`✅ Good length: ${wordCount} words (ideal: 400-700)`);
+  } else if (wordCount < 400) {
+    const penalty = Math.min(15, Math.floor((400 - wordCount) / 20));
+    score -= penalty;
+    deductions.push(`-${penalty} pts: Too short (${wordCount} words, aim for 400+)`);
+    feedback.push(`⚠️ Short: ${wordCount} words (aim for 400-700)`);
   } else {
-    score += 5;
-    feedback.push(`Short document: ${wordCount} words (aim for 100+)`);
+    const penalty = Math.min(10, Math.floor((wordCount - 700) / 50));
+    score -= penalty;
+    deductions.push(`-${penalty} pts: Too long (${wordCount} words, aim for ≤700)`);
+    feedback.push(`⚠️ Long: ${wordCount} words (aim for 400-700)`);
   }
 
-  // Check for structure (headings)
-  const hasHeadings = /^#+\s/m.test(text) || /<h[1-6]/i.test(text);
-  if (hasHeadings) {
-    score += 25;
-    feedback.push('Document has headings/structure');
+  // 2. Check for masculine-coded words (-5 pts each, max -25)
+  const masculineCount = jdValidation.warnings.filter(w => w.type === 'masculine-coded').length;
+  if (masculineCount > 0) {
+    const penalty = Math.min(25, masculineCount * 5);
+    score -= penalty;
+    deductions.push(`-${penalty} pts: ${masculineCount} masculine-coded word(s)`);
+    feedback.push(`🚨 ${masculineCount} masculine-coded word(s) found`);
   } else {
-    feedback.push('Consider adding headings for better structure');
+    feedback.push('✅ No masculine-coded words');
   }
 
-  // Check for paragraphs
-  const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0);
-  if (paragraphs.length >= 3) {
-    score += 25;
-    feedback.push(`Good paragraph structure: ${paragraphs.length} paragraphs`);
-  } else if (paragraphs.length >= 2) {
-    score += 15;
-    feedback.push(`Basic paragraph structure: ${paragraphs.length} paragraphs`);
+  // 3. Check for extrovert-bias phrases (-5 pts each, max -20)
+  const extrovertCount = jdValidation.warnings.filter(w => w.type === 'extrovert-bias').length;
+  if (extrovertCount > 0) {
+    const penalty = Math.min(20, extrovertCount * 5);
+    score -= penalty;
+    deductions.push(`-${penalty} pts: ${extrovertCount} extrovert-bias phrase(s)`);
+    feedback.push(`🚨 ${extrovertCount} extrovert-bias phrase(s) found`);
   } else {
-    score += 5;
-    feedback.push('Consider breaking content into multiple paragraphs');
+    feedback.push('✅ No extrovert-bias phrases');
   }
 
-  // Check for lists
-  const hasLists = /^[-*]\s/m.test(text) || /^\d+\.\s/m.test(text);
-  if (hasLists) {
-    score += 15;
-    feedback.push('Document includes lists');
+  // 4. Check for red flag phrases (-5 pts each, max -25)
+  const redFlagCount = jdValidation.warnings.filter(w => w.type === 'red-flag').length;
+  if (redFlagCount > 0) {
+    const penalty = Math.min(25, redFlagCount * 5);
+    score -= penalty;
+    deductions.push(`-${penalty} pts: ${redFlagCount} red flag phrase(s)`);
+    feedback.push(`🚨 ${redFlagCount} red flag phrase(s) found`);
+  } else {
+    feedback.push('✅ No red flag phrases');
   }
 
-  // Check for code blocks
-  const hasCode = /```/.test(text) || /`[^`]+`/.test(text);
-  if (hasCode) {
-    score += 10;
-    feedback.push('Document includes code examples');
+  // 5. Check for compensation range (-10 pts if missing)
+  const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
+                          /salary.*\$[\d,]+/i.test(text) ||
+                          /compensation.*\$[\d,]+/i.test(text) ||
+                          /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
+  if (hasCompensation) {
+    feedback.push('✅ Compensation range included');
+  } else {
+    score -= 10;
+    deductions.push('-10 pts: No compensation range found');
+    feedback.push('⚠️ No compensation range found');
   }
 
-  // Cap score at 100
-  score = Math.min(score, 100);
+  // 6. Check for encouragement statement (-5 pts if missing)
+  const hasEncouragement = /60.*70.*%|meet.*most|don't.*meet.*all|encouraged.*apply/i.test(text);
+  if (hasEncouragement) {
+    feedback.push('✅ Includes encouragement statement');
+  } else {
+    score -= 5;
+    deductions.push('-5 pts: Missing "60-70%" encouragement statement');
+    feedback.push('⚠️ Missing encouragement statement (e.g., "If you meet 60-70%...")');
+  }
+
+  // 7. Check for required sections
+  const hasResponsibilities = /responsibilities|what you'll do|key duties/i.test(text);
+  const hasRequirements = /required|qualifications|requirements/i.test(text);
+  const hasBenefits = /benefits|what we offer|perks|compensation/i.test(text);
+
+  if (hasResponsibilities && hasRequirements && hasBenefits) {
+    feedback.push('✅ All key sections present');
+  } else {
+    const missing = [];
+    if (!hasResponsibilities) missing.push('Responsibilities');
+    if (!hasRequirements) missing.push('Requirements');
+    if (!hasBenefits) missing.push('Benefits');
+    score -= missing.length * 5;
+    deductions.push(`-${missing.length * 5} pts: Missing sections: ${missing.join(', ')}`);
+    feedback.push(`⚠️ Missing sections: ${missing.join(', ')}`);
+  }
+
+  // Floor score at 0
+  score = Math.max(0, score);
 
   return {
     score,
     grade: getGrade(score),
     feedback,
+    deductions,
     wordCount,
-    paragraphCount: paragraphs.length
+    warnings: jdValidation.warnings,
+    warningCount: jdValidation.warnings.length
   };
 }
 
