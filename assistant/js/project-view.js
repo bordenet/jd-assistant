@@ -206,12 +206,12 @@ function renderPhaseContent(project, phaseNumber) {
                     ${issuesList}
                 </div>
                 <div class="flex gap-3 flex-wrap items-center">
-                    <button id="export-complete-btn" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <button id="export-complete-btn" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-lg">
                         📄 Preview & Copy
                     </button>
-                    <a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
-                        Full Validation ↗
-                    </a>
+                    <button id="validate-score-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg">
+                        📋 Copy & Validate ↗
+                    </button>
                 </div>
             </div>
             <!-- Expandable Help Section -->
@@ -467,6 +467,25 @@ function attachPhaseEventListeners(project, phase) {
       }
     });
   }
+
+  // Validate & Score button - copies final draft and opens validator
+  document.getElementById('validate-score-btn')?.addEventListener('click', async () => {
+    const markdown = getFinalMarkdown(project);
+    if (markdown) {
+      try {
+        await copyToClipboard(markdown);
+        showToast('Document copied! Opening validator...', 'success');
+        setTimeout(() => {
+          window.open('https://bordenet.github.io/jd-assistant/validator/', '_blank', 'noopener,noreferrer');
+        }, 500);
+      } catch {
+        showToast('Failed to copy. Please try again.', 'error');
+      }
+    } else {
+      showToast('No content to copy', 'warning');
+    }
+  });
+
   const comparePhasesBtn = document.getElementById('compare-phases-btn');
   if (comparePhasesBtn) {
     comparePhasesBtn.addEventListener('click', () => {
