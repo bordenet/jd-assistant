@@ -151,4 +151,51 @@ describe('Storage Module', () => {
             expect(value).toBe('dark');
         });
     });
+
+    describe('exportAll and importAll', () => {
+        it('exportAll should export all projects', async () => {
+            const project1 = { id: 'exp-1', title: 'Export 1', jobTitle: 'Engineer' };
+            const project2 = { id: 'exp-2', title: 'Export 2', jobTitle: 'Manager' };
+
+            await storage.saveProject(project1);
+            await storage.saveProject(project2);
+
+            const exported = await storage.exportAll();
+            expect(exported.projects.length).toBe(2);
+            expect(exported.projectCount).toBe(2);
+            expect(exported.exportDate).toBeDefined();
+            expect(exported.version).toBeDefined();
+        });
+
+        it('importAll should import all projects from export data', async () => {
+            const project1 = { id: 'imp-1', title: 'Import 1', jobTitle: 'Engineer' };
+            const project2 = { id: 'imp-2', title: 'Import 2', jobTitle: 'Manager' };
+
+            const importData = {
+                version: 1,
+                exportDate: new Date().toISOString(),
+                projectCount: 2,
+                projects: [project1, project2]
+            };
+
+            const count = await storage.importAll(importData);
+            expect(count).toBe(2);
+
+            const retrieved1 = await storage.getProject('imp-1');
+            const retrieved2 = await storage.getProject('imp-2');
+            expect(retrieved1).toBeTruthy();
+            expect(retrieved2).toBeTruthy();
+        });
+
+        it('importAll should throw on invalid import data', async () => {
+            await expect(storage.importAll({})).rejects.toThrow('Invalid import data');
+            await expect(storage.importAll({ projects: 'not-array' })).rejects.toThrow('Invalid import data');
+        });
+
+        it('exportAll should export empty backup when no projects', async () => {
+            const exported = await storage.exportAll();
+            expect(exported.projects).toEqual([]);
+            expect(exported.projectCount).toBe(0);
+        });
+    });
 });
