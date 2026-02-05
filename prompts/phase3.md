@@ -1,18 +1,13 @@
 # Phase 3: Final Synthesis (Claude Sonnet 4.5)
 
-<!--
-CUSTOMIZATION: Replace {{DOCUMENT_TYPE}}, {{PROJECT_TITLE}}, {{GITHUB_PAGES_URL}}.
-This phase synthesizes the best of Phase 1 + Phase 2.
--->
-
-You are synthesizing two AI-generated versions of a {{DOCUMENT_TYPE}} into the final, polished document.
+You are synthesizing a job description from an initial draft and adversarial review into the final, polished document.
 
 ## Context
 
 - **Phase 1**: Your initial draft (Claude Sonnet 4.5)
-- **Phase 2**: Reviewed and challenged version (Gemini 2.5 Pro)
+- **Phase 2**: Adversarial review with inclusive language audit (Gemini 2.5 Pro)
 
-Your task: Create the definitive {{DOCUMENT_TYPE}} combining the best of both.
+Your task: Create the FINAL job description that incorporates all valid critique while preserving strong elements.
 
 ---
 
@@ -22,23 +17,23 @@ Your task: Create the definitive {{DOCUMENT_TYPE}} combining the best of both.
 
 | Principle | Rule |
 |-----------|------|
+| **Inclusivity wins** | Choose gender-neutral, neurodiversity-friendly language |
 | **Specificity wins** | Choose concrete over vague |
-| **Metrics win** | Choose quantified over qualitative |
 | **Clarity wins** | Choose simple over complex |
-| **Asymmetry wins** | Choose committed positions over hedged |
+| **Candidate experience wins** | Choose language that attracts diverse candidates |
 
 ### Decision Framework
 
-1. **Both agree** → Use the more specific version
-2. **Both disagree** → Ask the user to decide
-3. **One is vague** → Use the specific version
-4. **Both are vague** → Ask for clarification
+1. **Phase 2 flags an issue** → Fix it (inclusive language is non-negotiable)
+2. **Phase 2 suggests improvement** → Incorporate if it improves clarity
+3. **Both versions are good** → Use the more specific version
+4. **Conflict on requirements** → Ask user to decide (don't guess)
 
 ---
 
-## ⚠️ FINAL AI Slop Sweep
+## ⚠️ FINAL Inclusive Language Sweep
 
-Before finalizing, eliminate ALL remaining slop:
+Before finalizing, eliminate ALL remaining issues:
 
 ### Zero Tolerance Patterns
 
@@ -46,95 +41,99 @@ Before finalizing, eliminate ALL remaining slop:
 
 | Category | Banned Examples |
 |----------|-----------------|
-| Vague metrics | "improve", "enhance", "optimize" (without numbers) |
-| Filler phrases | "It's important to note", "Let's explore", "At the end of the day" |
-| Buzzwords | "leverage", "synergy", "holistic", "cutting-edge", "game-changing" |
-| Hedges | "could potentially", "it depends", "generally speaking" |
-| Sycophancy | "Great question!", "Excellent point!", "Happy to help!" |
-| Over-signposting | "In this section we will...", "As mentioned earlier..." |
+| Masculine-coded words | aggressive, ambitious, ninja, rockstar, guru, go-getter, strong, tough |
+| Neurodiversity-excluding | fast-paced, self-starter, thrives in ambiguity, assertive communicator |
+| Red flag phrases | like a family, passion required, young/dynamic team, wear many hats |
+| Vague requirements | "strong X skills", "various tasks", "as needed" |
+| Gatekeeping language | "must have X years", "requires Y years" (use "experience with" instead) |
 
 ### Required Patterns
 
 **These MUST appear in final output:**
 
-- All metrics: **Baseline → Target → Timeline → Method**
-- All requirements: **Numbered (FR1, FR2, NFR1, NFR2)**
-- All integrations: **Named APIs and services**
-- All stakeholders: **Role + Impact + Success Criteria**
+- **Inclusive language**: Gender-neutral, neurodiversity-friendly, no red flags
+- **Concrete responsibilities**: "Own X and ship Y per quarter" (not "various tasks")
+- **Specific requirements**: "3+ years with Python" (not "strong Python skills")
+- **Clear compensation**: "$170,000 - $220,000 base salary" (not "competitive")
+- **Encouragement statement**: "If you meet 60-70% of qualifications, we encourage you to apply"
+- **Company info preserved**: Preamble and legal text exactly as provided
 
 ---
 
 ## Synthesis Process
 
-### Step 1: Compare Side-by-Side
+### Step 1: Apply Phase 2 Critique
 
-For each section, identify:
-- Where Phase 1 is better (more specific, clearer)
-- Where Phase 2 is better (challenged assumptions, alternatives)
-- Where both need improvement
+Review all issues flagged by Phase 2:
+- **Critical Issues**: MUST be fixed in final version
+- **Warnings**: Should be addressed if they improve clarity
+- **Strengths**: Preserve these elements
 
-### Step 2: Ask Clarifying Questions
+### Step 2: Resolve Conflicts
 
-If there are unresolved conflicts:
-1. Present the conflict clearly
-2. Ask the user to decide
-3. Wait for their answer
+If Phase 2 suggests changes that conflict with Phase 1:
+1. Prioritize inclusive language (non-negotiable)
+2. Prioritize specificity and clarity
+3. If still conflicted, ask the user to decide
 
-**Do NOT synthesize until conflicts are resolved.**
+**Do NOT guess on requirements or compensation.**
 
 ### Step 3: Synthesize
 
 Create the final version:
+- All Phase 2 critical issues fixed
 - Best specificity from either version
-- Challenged assumptions resolved
-- All AI slop eliminated
-- Consistent structure throughout
+- Inclusive language throughout
+- 400-700 words, clear structure
+- Company preamble and legal text preserved exactly
 
 ### Step 4: Validate
 
 Run final checklist:
-- [ ] Zero vague terms remaining
-- [ ] All metrics have baseline/target/timeline
-- [ ] All requirements numbered and testable
-- [ ] Cross-references are consistent
-- [ ] No internal contradictions
+- [ ] Zero masculine-coded words
+- [ ] Zero neurodiversity-excluding language
+- [ ] Zero red flag phrases
+- [ ] All responsibilities concrete and measurable
+- [ ] All requirements specific (not vague)
+- [ ] Compensation range included
+- [ ] Includes "If you meet 60-70% of qualifications, we encourage you to apply"
+- [ ] 400-700 words
+- [ ] Company info preserved exactly
 
 ---
 
 ## Output Format
 
 ```markdown
-# {Document Title}
+# {{JOB_TITLE}}
 
-## 1. Executive Summary
-{Best of both versions - specific, quantified}
+## About the Role
+[2-4 sentences describing impact and context]
 
-## 2. Problem Statement
-{Best of both versions}
+## Key Responsibilities
+[5-8 concrete bullet points with outcomes]
 
-### 2.1 Current State
-### 2.2 Impact
+## Required Qualifications
+[3-6 specific, non-gatekeeping items]
 
-## 3. Goals and Objectives
-{Best of both versions}
+## Preferred Qualifications
+[4-8 nice-to-have items]
 
-{... continue all sections ...}
+## What We Offer
+- **Compensation:** [Range]
+- **Benefits:** [Key benefits]
+- **Growth:** [Career path]
+- **Team:** [Team structure]
+
+## To Apply
+[Clear CTA with timeline]
+
+If you meet 60-70% of these qualifications, we encourage you to apply.
 
 ---
 
-*This {{DOCUMENT_TYPE}} was generated using {{PROJECT_TITLE}}.*
-*Learn more at: {{GITHUB_PAGES_URL}}*
+[Company preamble and legal text preserved exactly]
 ```
-
----
-
-## Synthesis Notes
-
-When you make choices between versions, briefly note:
-- Which version you chose for each section
-- Why (more specific, better challenged, clearer)
-
-This helps the user understand your synthesis decisions.
 
 ---
 

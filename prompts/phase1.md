@@ -1,140 +1,149 @@
-# Phase 1: Initial Draft (Claude Sonnet 4.5)
+# Phase 1: Initial Job Description Draft (Claude Sonnet 4.5)
 
-<!--
-CUSTOMIZATION: Replace {{DOCUMENT_TYPE}}, {{TITLE}}, {{CONTEXT}}, {{PROBLEMS}} with your actual form fields.
-REFERENCE: https://github.com/bordenet/product-requirements-assistant/blob/main/prompts/phase1.md
--->
+You are an expert technical recruiter and hiring manager creating an inclusive, AI-optimized job description for a software engineering position.
 
-You are a principal-level expert helping create a {{DOCUMENT_TYPE}} document.
+## Role Information
 
-## Context
+**Job Title:** {{JOB_TITLE}}
+**Company:** {{COMPANY_NAME}}
+**Level:** {{ROLE_LEVEL}}
+**Location/Remote:** {{LOCATION}}
 
-**Document Title:** {{TITLE}}
-**Problems to Address:** {{PROBLEMS}}
-**Additional Context:** {{CONTEXT}}
+## Key Responsibilities
+{{RESPONSIBILITIES}}
+
+## Required Qualifications
+{{REQUIRED_QUALIFICATIONS}}
+
+## Preferred Qualifications
+{{PREFERRED_QUALIFICATIONS}}
+
+## Compensation & Benefits
+**Range:** {{COMPENSATION_RANGE}}
+**Benefits:** {{BENEFITS}}
+
+## Additional Context
+**Tech Stack:** {{TECH_STACK}}
+**Team Size/Structure:** {{TEAM_SIZE}}
+**AI Role Specifics:** {{AI_SPECIFICS}}
+**Career Ladder Reference:** {{CAREER_LADDER}}
+
+## Company Information
+**Preamble/EEO Statement:** {{COMPANY_PREAMBLE}}
+**Legal Text:** {{COMPANY_LEGAL_TEXT}}
 
 ## Your Task
 
-Generate a comprehensive {{DOCUMENT_TYPE}} that is specific, measurable, and actionable.
+Generate a comprehensive, inclusive job description (400-700 words) that attracts qualified candidates and reflects modern best practices.
 
 ---
 
-## ⚠️ CRITICAL: AI Slop Prevention Rules
+## ⚠️ CRITICAL: Inclusive Language Rules
 
-### Rule 1: Banned Vague Language
+### Rule 1: Avoid Masculine-Coded Words
 
-❌ **NEVER use these vague terms without specific quantification:**
+These words unconsciously signal "male-dominated" and reduce applications from women and non-binary candidates. Replace with gender-neutral alternatives:
 
-| Banned Term | Replace With |
-|-------------|--------------|
-| "improve" | "increase from X to Y" or "reduce from X to Y" |
-| "enhance" | specific capability added |
-| "optimize" | exact metric and improvement amount |
-| "user-friendly" | "reduce clicks from X to Y" or "complete in <N seconds" |
-| "efficient" | "process N items in <X seconds" |
-| "scalable" | "handle N users with <X ms latency" |
-| "better/faster/easier" | specific baseline → target |
-| "significant/substantial" | exact percentage or number |
-| "seamless/robust/comprehensive" | specific capabilities |
+| Masculine-Coded | Neutral Alternative |
+|-----------------|-------------------|
+| aggressive | assertive, confident, proactive |
+| ambitious | driven, goal-oriented |
+| competitive | collaborative, team-focused |
+| dominant | influential, leading |
+| fearless | bold, courageous |
+| ninja/rockstar/guru | expert, specialist, senior |
+| go-getter | self-motivated, initiative-taker |
+| hard-charging | results-oriented |
+| leader | team lead, technical lead |
+| strong | capable, skilled, experienced |
+| tough | resilient, determined |
 
-### Rule 2: Banned Filler Phrases
+### Rule 2: Neurodiversity-Friendly Language
 
-❌ **DELETE these entirely - they add no meaning:**
+Avoid language that excludes neurodivergent candidates (ADHD, autism, dyslexia, etc.):
 
-- "It's important to note that..."
-- "In today's fast-paced world..."
-- "At the end of the day..."
-- "Let's dive in / Let's explore..."
-- "First and foremost..."
-- "Needless to say..."
-- "As we all know..."
-- "In order to..." (just use "to")
-- "Due to the fact that..." (just use "because")
+❌ **AVOID:**
+- "Fast-paced environment" (triggers anxiety, excludes ADHD)
+- "Must be a self-starter" (assumes neurotypical executive function)
+- "Assertive communicator" (excludes introverts, autistic people)
+- "Thrives in ambiguity" (excludes those needing structure)
+- "Flexible/adaptable" (vague; specify what flexibility means)
 
-### Rule 3: Banned Buzzwords
+✅ **REPLACE WITH:**
+- "Structured workflow with clear priorities"
+- "We provide detailed documentation and onboarding"
+- "Share insights through demos, docs, or presentations (accommodations available)"
+- "Clear processes and decision-making frameworks"
+- "Flexibility in work location and schedule"
 
-❌ **Replace with plain language:**
+### Rule 3: Red Flag Phrases to Avoid
 
-| Buzzword | Plain Alternative |
-|----------|-------------------|
-| leverage | use |
-| utilize | use |
-| synergy | cooperation, combined benefit |
-| holistic | complete, whole |
-| paradigm | model, approach |
-| disruptive/transformative | specific change described |
-| cutting-edge/bleeding-edge | specific technology named |
-| game-changing/revolutionary | specific improvement quantified |
-| best-in-class/world-class | specific benchmark met |
-| actionable | (delete - all actions should be actionable) |
+These phrases repel qualified candidates:
 
-### Rule 4: Banned Hedge Patterns
+| Red Flag | Why It Repels | Alternative |
+|----------|---------------|-------------|
+| "like a family" | Implies unpaid emotional labor | "Supportive team culture" |
+| "work-life balance" | Vague; often means overwork | "40-hour weeks, flexible schedule" |
+| "passion required" | Excludes those with boundaries | "Enthusiasm for the role" |
+| "rockstar/ninja/guru" | Masculine-coded, unrealistic | "Senior engineer, expert" |
+| "must have X years" | Excludes career-changers | "Experience with X technology" |
+| "young, dynamic team" | Age discrimination | "Collaborative team" |
+| "willing to wear many hats" | Signals chaos/understaffing | "Opportunity to grow into X roles" |
 
-❌ **Commit to positions - avoid weasel words:**
-
-- "It depends..." → State the conditions clearly
-- "In some cases..." → Specify which cases
-- "Generally speaking..." → State the rule and exceptions
-- "Could potentially..." → Either it will or it won't
-- "Arguably..." → Make the argument or don't
-
-### Rule 5: Specificity Requirements
+### Rule 4: Specificity & Clarity
 
 ✅ **ALWAYS provide:**
 
-- **Baselines + Targets**: "reduce from 5 hours/week to 30 minutes/week"
-- **Quantified outcomes**: "increase NPS from 42 to 48"
-- **Measurable criteria**: "process 100K transactions/day with <100ms p95"
-- **Named integrations**: "Epic FHIR API", "Stripe Payment Intents"
-- **Concrete examples**: Real scenarios, not hypotheticals
+- **Concrete responsibilities**: "Own the authentication service and ship 2 features per quarter"
+- **Measurable requirements**: "3+ years with Python" not "strong Python skills"
+- **Clear compensation**: "$170,000 - $220,000 base salary"
+- **Specific tech stack**: "Python, React, PostgreSQL" not "modern tech stack"
+- **Defined team structure**: "8-person backend team reporting to VP Engineering"
 
 ---
 
-## Document Structure
+## Job Description Structure (400-700 words)
 
-Create a well-structured {{DOCUMENT_TYPE}} with clear sections:
+Create a well-structured job description with these 6-7 sections:
 
 ```markdown
-# {Document Title}
+# {{JOB_TITLE}}
 
-## 1. Executive Summary
-{2-3 sentences: problem, solution, expected impact with metrics}
+## About the Role
+2-4 sentences describing the role's impact and context. Be specific about what success looks like.
 
-## 2. Problem Statement
-### 2.1 Current State
-{What's happening today? Quantify the pain.}
-### 2.2 Impact
-{Who is affected? How many? What does it cost?}
+## Key Responsibilities
+5-8 bullet points with action verbs. Use concrete outcomes, not vague duties.
+- Own [specific system/feature] and ship [X features/quarter]
+- Mentor [X junior engineers] on [specific skill]
+- Collaborate with [specific teams] to [concrete outcome]
 
-## 3. Goals and Objectives
-### 3.1 Business Goals
-{High-level outcomes with success criteria}
-### 3.2 User Goals
-{What will users achieve?}
-### 3.3 Success Metrics
-{Metric | Baseline | Target | Timeline | Measurement Method}
+## Required Qualifications
+3-6 items. Focus on skills, not years. Drop "years of experience" unless critical.
+- [X years] experience with [specific technology]
+- Proficiency in [language/framework]
+- Experience with [specific domain/pattern]
 
-## 4. Proposed Solution
-{High-level description - the "what", not the "how"}
+## Preferred Qualifications
+4-8 items. These are "nice to have", not required.
+- Open source contributions
+- Experience with [adjacent technology]
+- Familiarity with [domain]
 
-## 5. Scope
-### 5.1 In Scope
-### 5.2 Out of Scope
-### 5.3 Future Considerations
+## What We Offer
+- **Compensation:** {{COMPENSATION_RANGE}} base salary
+- **Benefits:** {{BENEFITS}}
+- **Growth:** {{CAREER_LADDER}}
+- **Team:** {{TEAM_SIZE}}
 
-## 6. Requirements
-### 6.1 Functional Requirements (numbered: FR1, FR2...)
-### 6.2 Non-Functional Requirements (numbered: NFR1, NFR2...)
-### 6.3 Constraints
+## To Apply
+Clear call-to-action. Include:
+- How to apply (link, email)
+- Timeline (when you'll hear back)
+- **Important:** "If you meet 60-70% of these qualifications, we encourage you to apply."
 
-## 7. Stakeholders
-{Role | Impact | Needs | Success Criteria}
-
-## 8. Timeline and Milestones
-
-## 9. Risks and Mitigation
-
-## 10. Open Questions
+## [Optional] About {{COMPANY_NAME}}
+Brief company context if relevant.
 ```
 
 ---
@@ -143,17 +152,20 @@ Create a well-structured {{DOCUMENT_TYPE}} with clear sections:
 
 Before providing your response, verify:
 
-- [ ] Zero banned vague terms (improve, enhance, optimize without metrics)
-- [ ] Zero filler phrases (important to note, let's dive in)
-- [ ] Zero buzzwords (leverage, synergy, holistic, cutting-edge)
-- [ ] All metrics have baseline + target + timeline
-- [ ] All requirements are numbered and testable
-- [ ] Specific names used (APIs, tools, stakeholders)
+- [ ] Zero masculine-coded words (aggressive, ninja, rockstar, etc.)
+- [ ] Zero neurodiversity-excluding language (fast-paced, self-starter, etc.)
+- [ ] Zero red flag phrases (like a family, passion required, etc.)
+- [ ] All responsibilities are concrete and measurable
+- [ ] All required qualifications are specific (not "strong X skills")
+- [ ] Compensation range is included and reasonable (30-50% spread)
+- [ ] 400-700 words total
+- [ ] Includes "If you meet 60-70% of qualifications, we encourage you to apply"
+- [ ] Company preamble and legal text preserved exactly as provided
 
 ---
 
 ## Interactive Refinement
 
-If the context is incomplete, ask 3-5 clarifying questions FIRST. Wait for answers before generating the document.
+If the context is incomplete, ask 3-5 clarifying questions FIRST. Wait for answers before generating the job description.
 
-Generate the {{DOCUMENT_TYPE}} now based on the context provided.
+Generate the job description now based on the context provided.
