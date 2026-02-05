@@ -46,9 +46,9 @@ export async function updateStorageInfo() {
       if (estimate) {
         const usedMB = (estimate.usage / (1024 * 1024)).toFixed(1);
         const quotaMB = (estimate.quota / (1024 * 1024)).toFixed(0);
-        storageInfo.textContent = `${projects.length} job descriptions • ${usedMB}MB used of ${quotaMB}MB`;
+        storageInfo.textContent = `${projects.length} proposals • ${usedMB}MB used of ${quotaMB}MB`;
       } else {
-        storageInfo.textContent = `${projects.length} job descriptions stored locally`;
+        storageInfo.textContent = `${projects.length} proposals stored locally`;
       }
     }
   } catch (error) {

@@ -339,14 +339,12 @@ function attachPhaseEventListeners(project, phase) {
 
     if (!warningAcknowledged) {
       const confirmed = await confirm(
-        `⚠️ External AI Warning (${aiService})`,
         `You are about to copy a prompt that may contain proprietary data.\n\n` +
                 `• This prompt will be pasted into ${aiService}\n` +
                 `• Data sent to ${aiService} is processed on third-party servers\n` +
                 '• For sensitive documents, use an internal tool like LibreGPT instead\n\n' +
                 'Do you want to continue?',
-        'Copy Anyway',
-        'Cancel'
+        `⚠️ External AI Warning (${aiService})`
       );
 
       if (!confirmed) {
