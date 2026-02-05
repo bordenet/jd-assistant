@@ -37,55 +37,310 @@
               <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
             </svg>
             <svg class="w-6 h-6 dark:hidden text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.828-2.828a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5.707 5.293a1 1 0 00-1.414 1.414l.707.707A1 1 0 007.414 5.586L5.707 5.293z" clip-rule="evenodd"></path>
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.828-2.828a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414l.707.707zm.707 5.657a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 1.414l-.707.707zM9 16a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zm-4.536-.464a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zm2.828-2.828a1 1 0 001.414-1.414L5.586 9.172a1 1 0 00-1.414 1.414l.707.707zM5.707 5.293a1 1 0 00-1.414 1.414l.707.707A1 1 0 007.414 5.586L5.707 5.293z" clip-rule="evenodd"></path>
             </svg>
+          </button>
+          <button
+            id="btn-about"
+            class="px-4 py-2 rounded-lg bg-slate-950 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white dark:text-slate-100 transition-colors font-medium border border-slate-700"
+            title="About this tool"
+          >
+            About
           </button>
         </div>
       </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-auto p-6">
-      <div class="max-w-4xl mx-auto">
-        <div class="bg-slate-800 rounded-lg p-6 shadow-lg">
-          <h2 class="text-xl font-semibold mb-4 text-white">Job Description Validator</h2>
-          <p class="text-slate-300 mb-4">Paste your job description below to check for inclusive language, red flags, and best practices.</p>
+    <main class="flex-1 overflow-hidden">
+      <div class="max-w-7xl mx-auto h-full px-6 py-6 flex flex-col gap-6">
 
-          <textarea
-            id="document-input"
-            class="w-full h-64 p-4 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Paste your document here..."
-          ></textarea>
+        <!-- Editor and Scorecard Row -->
+        <div class="flex gap-6 flex-1 min-h-0">
 
-          <div class="mt-4 flex gap-4">
-            <button
-              id="btn-validate"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              Validate
-            </button>
-            <button
-              id="btn-clear"
-              class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
-            >
-              Clear
-            </button>
+          <!-- Left: Markdown Editor -->
+          <div class="flex-1 flex flex-col min-w-0">
+            <label for="editor" class="block text-sm font-semibold text-white dark:text-slate-300 mb-1">
+              Paste Your Job Description
+            </label>
+            <p class="text-xs text-slate-300 dark:text-slate-400 mb-2">
+              Generate a JD with the <a href="https://bordenet.github.io/jd-assistant/" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">JD Assistant</a>, then paste here. The validator checks for inclusive language, red flags, and best practices.
+            </p>
+            <textarea
+              id="editor"
+              class="flex-1 w-full p-4 border border-slate-400 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 resize-none font-mono text-sm"
+              placeholder="→ Paste your Job Description here (Cmd/Ctrl+V)&#10;  Coming from the Assistant? It's already in your clipboard.&#10;&#10;The validator scores:&#10;• Inclusive Language (30 pts)&#10;• Structure & Clarity (25 pts)&#10;• Transparency (25 pts)&#10;• Candidate Experience (20 pts)"
+            ></textarea>
           </div>
 
-          <div id="results" class="mt-6 hidden">
-            <h3 class="text-lg font-semibold mb-2 text-white">Validation Results</h3>
-            <div id="results-content" class="bg-slate-900 rounded-lg p-4 text-slate-300"></div>
+          <!-- Right: Scorecard -->
+          <div class="w-80 flex flex-col gap-3">
+            <!-- Scoring Mode Toggle -->
+            <div class="flex items-center justify-between bg-slate-700 dark:bg-slate-800 rounded-lg px-4 py-2">
+              <span class="text-sm font-medium text-slate-300">Scoring Mode</span>
+              <div class="flex items-center gap-2">
+                <span id="mode-label-quick" class="text-xs text-white font-medium">Quick</span>
+                <button
+                  id="btn-toggle-mode"
+                  class="relative w-12 h-6 bg-slate-500 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  role="switch"
+                  aria-checked="false"
+                  aria-label="Toggle between Quick and LLM scoring"
+                >
+                  <span class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform"></span>
+                </button>
+                <span id="mode-label-llm" class="text-xs text-slate-400">LLM</span>
+              </div>
+            </div>
+
+            <!-- Quick Score Panel (JS-based) -->
+            <div id="quick-score-panel" class="bg-white dark:bg-slate-900 border border-slate-400 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+              <div class="mb-6">
+                <div class="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
+                  <span id="score-total">--</span><span class="text-xl">/100</span>
+                </div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                  <div id="score-bar" class="bg-blue-600 dark:bg-blue-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Score Breakdown -->
+              <div class="space-y-4">
+                <!-- Inclusive Language -->
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Inclusive Language</span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span id="score-inclusive">--</span>/30
+                    </span>
+                  </div>
+                  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                    <div id="score-inclusive-bar" class="bg-emerald-500 dark:bg-emerald-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                  </div>
+                </div>
+
+                <!-- Structure & Clarity -->
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Structure & Clarity</span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span id="score-structure">--</span>/25
+                    </span>
+                  </div>
+                  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                    <div id="score-structure-bar" class="bg-blue-500 dark:bg-blue-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                  </div>
+                </div>
+
+                <!-- Transparency -->
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Transparency</span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span id="score-transparency">--</span>/25
+                    </span>
+                  </div>
+                  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                    <div id="score-transparency-bar" class="bg-amber-500 dark:bg-amber-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                  </div>
+                </div>
+
+                <!-- Candidate Experience -->
+                <div>
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Candidate Experience</span>
+                    <span class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <span id="score-experience">--</span>/20
+                    </span>
+                  </div>
+                  <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                    <div id="score-experience-bar" class="bg-rose-500 dark:bg-rose-400 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LLM Score Panel (hidden by default) -->
+            <div id="llm-score-panel" class="hidden bg-white dark:bg-slate-900 border border-slate-400 dark:border-slate-800 rounded-lg p-6 shadow-sm">
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">LLM Scoring</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Get detailed, context-aware scoring from an LLM. More accurate than pattern matching.
+              </p>
+
+              <div class="space-y-3 text-sm text-slate-700 dark:text-slate-300 mb-4">
+                <div class="flex items-start gap-2">
+                  <span class="text-emerald-500">✓</span>
+                  <span>Understands context and nuance</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="text-emerald-500">✓</span>
+                  <span>Catches semantic issues</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="text-emerald-500">✓</span>
+                  <span>Detailed justification per dimension</span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <span class="text-emerald-500">✓</span>
+                  <span>Actionable improvement suggestions</span>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <button
+                  id="btn-copy-llm-prompt"
+                  class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                >
+                  📋 Copy Scoring Prompt
+                </button>
+                <button
+                  id="btn-view-llm-prompt"
+                  class="w-full px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white font-medium rounded-lg transition-colors"
+                >
+                  👁️ View Prompt
+                </button>
+                <a
+                  id="btn-open-claude-llm"
+                  href="https://claude.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="block w-full px-4 py-2 bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 font-medium rounded-lg transition-colors text-center cursor-not-allowed pointer-events-none"
+                  aria-disabled="true"
+                >
+                  Open Claude.ai →
+                </a>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- AI Power-ups Section (hidden by default) -->
+        <div
+          id="ai-powerups"
+          class="hidden bg-slate-600 dark:bg-slate-900 border border-slate-500 dark:border-slate-800 rounded-lg p-6 shadow-sm"
+        >
+          <h2 class="text-lg font-semibold text-white dark:text-white mb-2">AI Power-ups</h2>
+          <ol class="text-sm text-slate-300 dark:text-slate-400 mb-4 list-decimal list-inside space-y-1">
+            <li>Click a button below to copy a prompt to your clipboard</li>
+            <li>Paste into Claude.ai and submit</li>
+            <li>Copy the revised job description from Claude's response</li>
+            <li>Select all text in the editor above (Cmd+A) and paste to replace</li>
+          </ol>
+
+          <div class="flex gap-3 mb-6 flex-wrap">
+            <button
+              id="btn-critique"
+              class="px-4 py-2 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+            >
+              📋 Copy Critique Prompt
+            </button>
+            <button
+              id="btn-rewrite"
+              class="px-4 py-2 bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white font-medium rounded-lg transition-colors"
+            >
+              📋 Copy Rewrite Prompt
+            </button>
+            <button
+              id="btn-view-prompt"
+              class="px-4 py-2 bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 font-medium rounded-lg transition-colors cursor-not-allowed"
+              disabled
+              aria-disabled="true"
+            >
+              👁️ View Prompt
+            </button>
+            <a
+              id="btn-open-claude"
+              href="https://claude.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-4 py-2 bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 font-medium rounded-lg transition-colors inline-flex items-center gap-2 cursor-not-allowed pointer-events-none"
+              aria-disabled="true"
+            >
+              Open Claude.ai →
+            </a>
+          </div>
+
         </div>
       </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 border-t border-slate-800 py-4">
-      <div class="max-w-7xl mx-auto px-6 text-center text-slate-400 text-sm">
-        <p>✨ JD Validator - Job Description Quality Checker</p>
+    <footer class="bg-slate-600 dark:bg-slate-900 border-t border-slate-500 dark:border-slate-800">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <button
+            id="btn-save"
+            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors"
+            title="Save current version (Cmd+S)"
+          >
+            💾 Save
+          </button>
+          <div class="flex items-center gap-1">
+            <button
+              id="btn-back"
+              class="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+              title="Previous version"
+              disabled
+            >
+              ◀
+            </button>
+            <button
+              id="btn-forward"
+              class="px-3 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-lg transition-colors disabled:cursor-not-allowed"
+              title="Next version"
+              disabled
+            >
+              ▶
+            </button>
+          </div>
+          <span id="version-info" class="text-sm text-slate-300 dark:text-slate-400">No saved versions</span>
+        </div>
+        <div class="text-sm text-slate-300 dark:text-slate-400 text-right">
+          <div id="last-saved"></div>
+          <div id="storage-info" class="text-xs text-slate-400 dark:text-slate-500"></div>
+        </div>
       </div>
     </footer>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 space-y-3 pointer-events-none z-50"></div>
+
+  <!-- About Modal (hidden by default) -->
+  <div id="about-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+    <div class="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-4">About JD Validator</h2>
+      <p class="text-slate-700 dark:text-slate-300 mb-4">
+        A client-side tool for validating job descriptions for inclusive language and best practices.
+      </p>
+      <p class="text-slate-700 dark:text-slate-300 mb-6">
+        The validator scores your job description across four dimensions:
+      </p>
+      <ul class="space-y-2 text-sm text-slate-700 dark:text-slate-300 mb-6">
+        <li class="flex items-start gap-2">
+          <span class="text-emerald-500 font-bold">•</span>
+          <span><strong>Inclusive Language (30 pts)</strong> - Gender-neutral, neurodiversity-friendly, culture signals</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-blue-500 font-bold">•</span>
+          <span><strong>Structure & Clarity (25 pts)</strong> - Clear sections, concise length, readable format</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-amber-500 font-bold">•</span>
+          <span><strong>Transparency (25 pts)</strong> - Compensation, requirements honesty, encouragement</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-rose-500 font-bold">•</span>
+          <span><strong>Candidate Experience (20 pts)</strong> - Benefits detail, growth path, application process</span>
+        </li>
+      </ul>
+      <button
+        id="btn-close-about"
+        class="w-full px-4 py-2 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+      >
+        Close
+      </button>
+    </div>
   </div>
 
   <script type="module" src="js/app.js"></script>

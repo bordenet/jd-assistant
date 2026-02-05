@@ -136,7 +136,7 @@ describe('Phase 3 Synthesis', () => {
       const proposal = '# Proposal';
       exportAsMarkdown(proposal);
 
-      expect(mockAnchor.download).toBe('proposal.md');
+      expect(mockAnchor.download).toBe('job-description.md');
     });
   });
 

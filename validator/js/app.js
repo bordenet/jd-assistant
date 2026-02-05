@@ -1,121 +1,518 @@
+// ============================================================
+// JD Validator - Main Application
+// ============================================================
+
+import { validateDocument } from './validator.js';
+import { showToast, copyToClipboard, debounce, getScoreColor, showPromptModal, createStorage } from './core/index.js';
+import { generateCritiquePrompt, generateRewritePrompt, generateLLMScoringPrompt } from './prompts.js';
+
+// ============================================================
+// State
+// ============================================================
+
+let currentResult = null;
+let _lastSavedContent = ''; // eslint-disable-line no-unused-vars -- reserved for future dirty-state tracking
+let currentPrompt = null;
+let isLLMMode = false;
+
+// Initialize storage with factory
+const storage = createStorage('jd-validator-history');
+
+// ============================================================
+// DOM Elements
+// ============================================================
+
+const editor = document.getElementById('editor');
+const scoreTotal = document.getElementById('score-total');
+const scoreInclusive = document.getElementById('score-inclusive');
+const scoreStructure = document.getElementById('score-structure');
+const scoreTransparency = document.getElementById('score-transparency');
+const scoreExperience = document.getElementById('score-experience');
+const aiPowerups = document.getElementById('ai-powerups');
+const btnCritique = document.getElementById('btn-critique');
+const btnRewrite = document.getElementById('btn-rewrite');
+const btnSave = document.getElementById('btn-save');
+const btnBack = document.getElementById('btn-back');
+const btnForward = document.getElementById('btn-forward');
+const versionInfo = document.getElementById('version-info');
+const lastSaved = document.getElementById('last-saved');
+const storageInfoEl = document.getElementById('storage-info');
+const toastContainer = document.getElementById('toast-container');
+const btnDarkMode = document.getElementById('btn-dark-mode');
+const btnAbout = document.getElementById('btn-about');
+const btnOpenClaude = document.getElementById('btn-open-claude');
+const btnViewPrompt = document.getElementById('btn-view-prompt');
+const btnToggleMode = document.getElementById('btn-toggle-mode');
+const quickScorePanel = document.getElementById('quick-score-panel');
+const llmScorePanel = document.getElementById('llm-score-panel');
+const modeLabelQuick = document.getElementById('mode-label-quick');
+const modeLabelLLM = document.getElementById('mode-label-llm');
+const btnCopyLLMPrompt = document.getElementById('btn-copy-llm-prompt');
+const btnViewLLMPrompt = document.getElementById('btn-view-llm-prompt');
+const btnOpenClaudeLLM = document.getElementById('btn-open-claude-llm');
+
+// ============================================================
+// Score Calculation Helpers
+// ============================================================
+
 /**
- * JD Validator - Main Application
- *
- * Simple validator demonstrating the paired assistant/validator pattern.
+ * Calculate dimension scores from the validator result
+ * The validator returns a total score with deductions, we need to map to dimensions
  */
+function calculateDimensionScores(result) {
+  // Max points per dimension
+  const maxInclusive = 30;
+  const maxStructure = 25;
+  const maxTransparency = 25;
+  const maxExperience = 20;
 
-import { validateDocument, getScoreColor } from './validator.js';
+  // Start with max and deduct based on issues
+  let inclusive = maxInclusive;
+  let structure = maxStructure;
+  let transparency = maxTransparency;
+  let experience = maxExperience;
 
-/**
- * Initialize the application
- */
-function init() {
-  setupDarkMode();
-  setupEventListeners();
-}
+  // Deduct from Inclusive Language
+  const masculineCount = result.warnings.filter(w => w.type === 'masculine-coded').length;
+  const extrovertCount = result.warnings.filter(w => w.type === 'extrovert-bias').length;
+  const redFlagCount = result.warnings.filter(w => w.type === 'red-flag').length;
+  inclusive -= Math.min(15, masculineCount * 5);
+  inclusive -= Math.min(10, extrovertCount * 5);
+  inclusive -= Math.min(5, redFlagCount * 2);
+  inclusive = Math.max(0, inclusive);
 
-/**
- * Setup dark mode toggle
- */
-function setupDarkMode() {
-  const darkModeBtn = document.getElementById('btn-dark-mode');
-
-  // Check for saved preference or system preference
-  if (localStorage.getItem('darkMode') === 'true' ||
-      (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    document.documentElement.classList.add('dark');
+  // Deduct from Structure & Clarity based on word count
+  if (result.wordCount < 400) {
+    structure -= Math.min(15, Math.floor((400 - result.wordCount) / 20));
+  } else if (result.wordCount > 700) {
+    structure -= Math.min(10, Math.floor((result.wordCount - 700) / 50));
   }
+  structure = Math.max(0, structure);
 
-  darkModeBtn?.addEventListener('click', () => {
-    document.documentElement.classList.toggle('dark');
-    localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
-  });
+  // Deduct from Transparency based on compensation and encouragement
+  const hasComp = result.feedback.some(f => f.includes('Compensation range'));
+  const hasEncouragement = result.feedback.some(f => f.includes('encouragement'));
+  if (!hasComp) transparency -= 10;
+  if (!hasEncouragement) transparency -= 5;
+  // Red flags also affect transparency
+  transparency -= Math.min(10, redFlagCount * 3);
+  transparency = Math.max(0, transparency);
+
+  // Deduct from Candidate Experience based on missing sections
+  const hasBenefits = result.feedback.some(f => f.includes('Benefits') || f.includes('key sections'));
+  if (!hasBenefits) experience -= 8;
+  experience = Math.max(0, experience);
+
+  return {
+    inclusive: { score: inclusive, maxScore: maxInclusive },
+    structure: { score: structure, maxScore: maxStructure },
+    transparency: { score: transparency, maxScore: maxTransparency },
+    experience: { score: experience, maxScore: maxExperience },
+    total: result.score
+  };
 }
 
-/**
- * Setup event listeners
- */
-function setupEventListeners() {
-  const validateBtn = document.getElementById('btn-validate');
-  const clearBtn = document.getElementById('btn-clear');
-  const documentInput = document.getElementById('document-input');
+// ============================================================
+// Score Display
+// ============================================================
 
-  validateBtn?.addEventListener('click', handleValidate);
-  clearBtn?.addEventListener('click', handleClear);
+function updateScoreDisplay(result) {
+  if (!result) return;
 
-  // Allow Ctrl+Enter to validate
-  documentInput?.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === 'Enter') {
-      handleValidate();
-    }
-  });
+  const scores = calculateDimensionScores(result);
+
+  // Update total score with color
+  scoreTotal.textContent = result.score;
+  scoreTotal.className = `text-4xl font-bold ${getScoreColor(result.score, 100)}`;
+
+  // Update dimension scores
+  scoreInclusive.textContent = scores.inclusive.score;
+  scoreStructure.textContent = scores.structure.score;
+  scoreTransparency.textContent = scores.transparency.score;
+  scoreExperience.textContent = scores.experience.score;
+
+  // Apply colors to dimension scores
+  scoreInclusive.className = getScoreColor(scores.inclusive.score, scores.inclusive.maxScore);
+  scoreStructure.className = getScoreColor(scores.structure.score, scores.structure.maxScore);
+  scoreTransparency.className = getScoreColor(scores.transparency.score, scores.transparency.maxScore);
+  scoreExperience.className = getScoreColor(scores.experience.score, scores.experience.maxScore);
+
+  // Update progress bars
+  const totalPercent = (result.score / 100) * 100;
+  const inclusivePercent = (scores.inclusive.score / scores.inclusive.maxScore) * 100;
+  const structurePercent = (scores.structure.score / scores.structure.maxScore) * 100;
+  const transparencyPercent = (scores.transparency.score / scores.transparency.maxScore) * 100;
+  const experiencePercent = (scores.experience.score / scores.experience.maxScore) * 100;
+
+  const scoreBar = document.getElementById('score-bar');
+  const inclusiveBar = document.getElementById('score-inclusive-bar');
+  const structureBar = document.getElementById('score-structure-bar');
+  const transparencyBar = document.getElementById('score-transparency-bar');
+  const experienceBar = document.getElementById('score-experience-bar');
+
+  if (scoreBar) scoreBar.style.width = `${totalPercent}%`;
+  if (inclusiveBar) inclusiveBar.style.width = `${inclusivePercent}%`;
+  if (structureBar) structureBar.style.width = `${structurePercent}%`;
+  if (transparencyBar) transparencyBar.style.width = `${transparencyPercent}%`;
+  if (experienceBar) experienceBar.style.width = `${experiencePercent}%`;
 }
 
-/**
- * Handle validate button click
- */
-function handleValidate() {
-  const documentInput = document.getElementById('document-input');
-  const resultsDiv = document.getElementById('results');
-  const resultsContent = document.getElementById('results-content');
 
-  const text = documentInput?.value?.trim();
+// ============================================================
+// Validation
+// ============================================================
 
-  if (!text) {
-    showResults('Please enter a document to validate.', 'error');
+function runValidation() {
+  const content = editor.value || '';
+  currentResult = validateDocument(content);
+  updateScoreDisplay(currentResult);
+
+  // Show/hide AI power-ups based on content length
+  if (content.length > 200) {
+    aiPowerups.classList.remove('hidden');
+  } else {
+    aiPowerups.classList.add('hidden');
+  }
+}
+
+const debouncedValidation = debounce(runValidation, 300);
+
+// ============================================================
+// Version Control
+// ============================================================
+
+function updateVersionDisplay() {
+  const version = storage.getCurrentVersion();
+  if (version) {
+    versionInfo.textContent = `Version ${version.versionNumber} of ${version.totalVersions}`;
+    lastSaved.textContent = storage.getTimeSince(version.savedAt);
+    btnBack.disabled = !version.canGoBack;
+    btnForward.disabled = !version.canGoForward;
+  } else {
+    versionInfo.textContent = 'No saved versions';
+    lastSaved.textContent = '';
+    btnBack.disabled = true;
+    btnForward.disabled = true;
+  }
+  updateStorageInfo();
+}
+
+async function updateStorageInfo() {
+  const estimate = await storage.getStorageEstimate();
+  if (estimate && storageInfoEl) {
+    storageInfoEl.textContent = `Storage: ${storage.formatBytes(estimate.usage)} / ${storage.formatBytes(estimate.quota)} (${estimate.percentage}%)`;
+  } else if (storageInfoEl) {
+    storageInfoEl.textContent = 'Storage: Available';
+  }
+}
+
+function handleSave() {
+  const content = editor.value || '';
+  if (!content.trim()) {
+    showToast('Nothing to save', 'warning', toastContainer);
     return;
   }
 
-  const result = validateDocument(text);
+  const result = storage.saveVersion(content);
+  if (result.success) {
+    _lastSavedContent = content;
+    showToast(`Saved as version ${result.versionNumber}`, 'success', toastContainer);
+    updateVersionDisplay();
+  } else if (result.reason === 'no-change') {
+    showToast('No changes to save', 'info', toastContainer);
+  } else {
+    showToast('Failed to save', 'error', toastContainer);
+  }
+}
 
-  const scoreColor = getScoreColor(result.score);
+function handleGoBack() {
+  const version = storage.goBack();
+  if (version) {
+    editor.value = version.markdown;
+    _lastSavedContent = version.markdown;
+    runValidation();
+    updateVersionDisplay();
+    showToast(`Restored version ${version.versionNumber}`, 'info', toastContainer);
+  }
+}
 
-  const html = `
-    <div class="space-y-4">
-      <div class="flex items-center gap-4">
-        <span class="text-2xl font-bold ${scoreColor}">${result.score}/100</span>
-        <span class="text-slate-400">${result.grade}</span>
-      </div>
-      <div class="space-y-2">
-        ${result.feedback.map(f => `<p class="text-sm">• ${f}</p>`).join('')}
-      </div>
+function handleGoForward() {
+  const version = storage.goForward();
+  if (version) {
+    editor.value = version.markdown;
+    _lastSavedContent = version.markdown;
+    runValidation();
+    updateVersionDisplay();
+    showToast(`Restored version ${version.versionNumber}`, 'info', toastContainer);
+  }
+}
+
+// ============================================================
+// AI Power-ups
+// ============================================================
+
+function enableClaudeButton() {
+  if (btnOpenClaude) {
+    btnOpenClaude.classList.remove('bg-slate-300', 'dark:bg-slate-600', 'text-slate-500', 'dark:text-slate-400', 'cursor-not-allowed', 'pointer-events-none');
+    btnOpenClaude.classList.add('bg-orange-600', 'dark:bg-orange-500', 'hover:bg-orange-700', 'dark:hover:bg-orange-600', 'text-white');
+    btnOpenClaude.removeAttribute('aria-disabled');
+  }
+}
+
+function enableViewPromptButton() {
+  if (btnViewPrompt) {
+    btnViewPrompt.classList.remove('bg-slate-300', 'dark:bg-slate-600', 'text-slate-500', 'dark:text-slate-400', 'cursor-not-allowed');
+    btnViewPrompt.classList.add('bg-teal-600', 'hover:bg-teal-700', 'text-white');
+    btnViewPrompt.disabled = false;
+    btnViewPrompt.removeAttribute('aria-disabled');
+  }
+}
+
+function handleCritique() {
+  const content = editor.value || '';
+  if (!content || !currentResult) {
+    showToast('Add some content first', 'warning', toastContainer);
+    return;
+  }
+
+  const prompt = generateCritiquePrompt(content, currentResult);
+  currentPrompt = { text: prompt, type: 'Critique' };
+
+  enableClaudeButton();
+  enableViewPromptButton();
+
+  copyToClipboard(prompt).then(success => {
+    if (success) {
+      showToast('Critique prompt copied! Now open Claude.ai and paste.', 'success', toastContainer);
+    } else {
+      showToast('Prompt ready but copy failed. Use View Prompt to copy manually.', 'warning', toastContainer);
+    }
+  }).catch(() => {
+    showToast('Prompt ready but copy failed. Use View Prompt to copy manually.', 'warning', toastContainer);
+  });
+}
+
+function handleRewrite() {
+  const content = editor.value || '';
+  if (!content || !currentResult) {
+    showToast('Add some content first', 'warning', toastContainer);
+    return;
+  }
+
+  const prompt = generateRewritePrompt(content, currentResult);
+  currentPrompt = { text: prompt, type: 'Rewrite' };
+
+  enableClaudeButton();
+  enableViewPromptButton();
+
+  copyToClipboard(prompt).then(success => {
+    if (success) {
+      showToast('Rewrite prompt copied! Now open Claude.ai and paste.', 'success', toastContainer);
+    } else {
+      showToast('Prompt ready but copy failed. Use View Prompt to copy manually.', 'warning', toastContainer);
+    }
+  }).catch(() => {
+    showToast('Prompt ready but copy failed. Use View Prompt to copy manually.', 'warning', toastContainer);
+  });
+}
+
+
+// ============================================================
+// Scoring Mode Toggle
+// ============================================================
+
+function toggleScoringMode() {
+  isLLMMode = !isLLMMode;
+
+  const toggleKnob = btnToggleMode.querySelector('span');
+  if (isLLMMode) {
+    btnToggleMode.classList.remove('bg-slate-500');
+    btnToggleMode.classList.add('bg-indigo-600');
+    toggleKnob.style.transform = 'translateX(24px)';
+    btnToggleMode.setAttribute('aria-checked', 'true');
+    modeLabelQuick.classList.remove('text-white');
+    modeLabelQuick.classList.add('text-slate-400');
+    modeLabelLLM.classList.remove('text-slate-400');
+    modeLabelLLM.classList.add('text-white');
+  } else {
+    btnToggleMode.classList.remove('bg-indigo-600');
+    btnToggleMode.classList.add('bg-slate-500');
+    toggleKnob.style.transform = 'translateX(0)';
+    btnToggleMode.setAttribute('aria-checked', 'false');
+    modeLabelQuick.classList.remove('text-slate-400');
+    modeLabelQuick.classList.add('text-white');
+    modeLabelLLM.classList.remove('text-white');
+    modeLabelLLM.classList.add('text-slate-400');
+  }
+
+  if (isLLMMode) {
+    quickScorePanel.classList.add('hidden');
+    llmScorePanel.classList.remove('hidden');
+  } else {
+    quickScorePanel.classList.remove('hidden');
+    llmScorePanel.classList.add('hidden');
+  }
+
+  localStorage.setItem('jd-scoringMode', isLLMMode ? 'llm' : 'quick');
+}
+
+function initScoringMode() {
+  const saved = localStorage.getItem('jd-scoringMode');
+  if (saved === 'llm') {
+    isLLMMode = false;
+    toggleScoringMode();
+  }
+}
+
+function enableClaudeLLMButton() {
+  if (btnOpenClaudeLLM) {
+    btnOpenClaudeLLM.classList.remove('bg-slate-300', 'dark:bg-slate-600', 'text-slate-500', 'dark:text-slate-400', 'cursor-not-allowed', 'pointer-events-none');
+    btnOpenClaudeLLM.classList.add('bg-orange-600', 'hover:bg-orange-700', 'text-white');
+    btnOpenClaudeLLM.removeAttribute('aria-disabled');
+  }
+}
+
+function handleCopyLLMPrompt() {
+  const content = editor.value || '';
+  if (!content.trim()) {
+    showToast('Add some content first', 'warning', toastContainer);
+    return;
+  }
+
+  const prompt = generateLLMScoringPrompt(content);
+  currentPrompt = { text: prompt, type: 'LLM Scoring' };
+
+  enableClaudeLLMButton();
+
+  copyToClipboard(prompt).then(success => {
+    if (success) {
+      showToast('LLM scoring prompt copied! Paste into Claude.ai for detailed evaluation.', 'success', toastContainer);
+    } else {
+      showToast('Prompt ready but copy failed. Use View Prompt to copy manually.', 'warning', toastContainer);
+    }
+  }).catch(() => {
+    showToast('Prompt ready but copy failed. Use View Prompt to copy manually.', 'warning', toastContainer);
+  });
+}
+
+function handleViewLLMPrompt() {
+  if (!currentPrompt || currentPrompt.type !== 'LLM Scoring') {
+    showToast('Copy the scoring prompt first', 'warning', toastContainer);
+    return;
+  }
+
+  showPromptModal(currentPrompt.text, 'LLM Scoring Prompt');
+}
+
+// ============================================================
+// Dark Mode
+// ============================================================
+
+function toggleDarkMode() {
+  document.documentElement.classList.toggle('dark');
+  const isDark = document.documentElement.classList.contains('dark');
+  localStorage.setItem('darkMode', isDark ? 'true' : 'false');
+}
+
+function initDarkMode() {
+  const saved = localStorage.getItem('darkMode');
+  if (saved === 'true' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  }
+}
+
+// ============================================================
+// About Modal
+// ============================================================
+
+function showAbout() {
+  const modal = document.createElement('div');
+  modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+  modal.innerHTML = `
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4 shadow-xl">
+      <h2 class="text-xl font-bold mb-4 dark:text-white">JD Validator</h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">
+        A client-side tool for validating job descriptions for inclusive language and best practices.
+      </p>
+      <p class="text-gray-600 dark:text-gray-300 mb-4">
+        <strong>Scoring Dimensions:</strong><br>
+        • Inclusive Language (30 pts)<br>
+        • Structure & Clarity (25 pts)<br>
+        • Transparency (25 pts)<br>
+        • Candidate Experience (20 pts)
+      </p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+        100% client-side. Your content never leaves your browser.
+      </p>
+      <button class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded" onclick="this.closest('.fixed').remove()">
+        Close
+      </button>
     </div>
   `;
-
-  showResults(html);
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
 }
 
-/**
- * Handle clear button click
- */
-function handleClear() {
-  const documentInput = document.getElementById('document-input');
-  const resultsDiv = document.getElementById('results');
+// ============================================================
+// Initialize
+// ============================================================
 
-  if (documentInput) documentInput.value = '';
-  if (resultsDiv) resultsDiv.classList.add('hidden');
-}
+function init() {
+  initDarkMode();
+  initScoringMode();
 
-/**
- * Show results in the results div
- */
-function showResults(html, type = 'success') {
-  const resultsDiv = document.getElementById('results');
-  const resultsContent = document.getElementById('results-content');
-
-  if (resultsContent) {
-    resultsContent.innerHTML = html;
+  const draft = storage.loadDraft();
+  if (draft && draft.markdown) {
+    editor.value = draft.markdown;
+    _lastSavedContent = draft.markdown;
   }
-  if (resultsDiv) {
-    resultsDiv.classList.remove('hidden');
+  updateVersionDisplay();
+
+  editor.addEventListener('input', () => {
+    debouncedValidation();
+  });
+
+  btnCritique.addEventListener('click', handleCritique);
+  btnRewrite.addEventListener('click', handleRewrite);
+  btnSave.addEventListener('click', handleSave);
+  btnBack.addEventListener('click', handleGoBack);
+  btnForward.addEventListener('click', handleGoForward);
+  btnDarkMode.addEventListener('click', toggleDarkMode);
+  btnAbout.addEventListener('click', showAbout);
+
+  if (btnToggleMode) {
+    btnToggleMode.addEventListener('click', toggleScoringMode);
+  }
+
+  if (btnCopyLLMPrompt) {
+    btnCopyLLMPrompt.addEventListener('click', handleCopyLLMPrompt);
+  }
+  if (btnViewLLMPrompt) {
+    btnViewLLMPrompt.addEventListener('click', handleViewLLMPrompt);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+      e.preventDefault();
+      handleSave();
+    }
+  });
+
+  if (btnViewPrompt) {
+    btnViewPrompt.addEventListener('click', () => {
+      if (currentPrompt && currentPrompt.text) {
+        showPromptModal(currentPrompt.text, `${currentPrompt.type} Prompt`);
+      }
+    });
+  }
+
+  setInterval(updateVersionDisplay, 60000);
+
+  if (editor.value.trim()) {
+    runValidation();
   }
 }
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-
-export { init, handleValidate, handleClear, showResults };
+document.addEventListener('DOMContentLoaded', init);
