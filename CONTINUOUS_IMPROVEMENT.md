@@ -112,6 +112,32 @@ Changed to per-service keys: `external-ai-warning-acknowledged-claude`, `externa
 
 ---
 
+### 2026-02-05: Module Docstrings and UI Copy Not Updated
+
+**Severity**: LOW
+**Status**: FIXED (this commit)
+
+**What Happened**:
+Two files still had copy from the strategic-proposal template:
+1. `assistant/js/prompts.js` lines 1-6: Said "Strategic Proposal Prompts Module" instead of "JD Assistant Prompts Module"
+2. `validator/index.html` lines 51-52: Had generic "Document Validator" copy instead of JD-specific
+
+**Root Cause**:
+Genesis template variable replacement only handles `{{VAR}}` style placeholders. Free-form text in module docstrings and UI copy was not updated.
+
+**Impact**:
+- User confusion (prompts.js docstring references wrong domain)
+- Generic validator UI (doesn't communicate JD-specific validation)
+
+**Fix Applied**:
+- Updated prompts.js docstring to "JD Assistant Prompts Module"
+- Updated validator/index.html to "Job Description Validator" with JD-specific description
+
+**Genesis Improvement**:
+Genesis should have a checklist item: "Verify ALL module docstrings and UI copy reference the correct domain"
+
+---
+
 ## Lessons for Genesis
 
 ### Template Variable Replacement is Insufficient
@@ -130,6 +156,8 @@ The genesis CHECKLIST.md should include:
 - [ ] All user-facing strings updated for domain
 - [ ] Completion view shows domain-specific metrics
 - [ ] Phase prompts reference correct domain terminology
+- [ ] Module docstrings updated (prompts.js, app.js, etc.)
+- [ ] Validator UI copy is domain-specific (not "Document Validator")
 
 ---
 

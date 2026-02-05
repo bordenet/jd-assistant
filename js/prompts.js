@@ -1,8 +1,8 @@
 /**
- * Strategic Proposal Prompts Module
+ * JD Assistant Prompts Module
  * @module prompts
  *
- * Manages workflow configuration and prompt generation for Strategic Proposals.
+ * Manages workflow configuration and prompt generation for Job Descriptions.
  * Prompts are stored in prompts/ directory as markdown files.
  */
 
