@@ -209,7 +209,7 @@ function renderPhaseContent(project, phaseNumber) {
                     <button id="export-complete-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
                         📄 Preview & Copy
                     </button>
-                    <a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
+                    <a href="https://bordenet.github.io/jd-assistant/validator/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-4 py-2 border border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors font-medium">
                         Full Validation ↗
                     </a>
                 </div>
