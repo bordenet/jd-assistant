@@ -224,7 +224,7 @@ function renderPhaseContent(project, phaseNumber) {
                         <li>Click <strong>"Preview & Copy"</strong> to see your formatted job description</li>
                         <li>Click <strong>"Copy Formatted Text"</strong> in the preview</li>
                         <li>Open <strong>Microsoft Word</strong> or <strong>Google Docs</strong> and paste</li>
-                        <li>Use <strong><a href="../validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">JD Validator</a></strong> to score and improve your job description</li>
+                        <li>Use <strong><a href="./validator/" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">JD Validator</a></strong> to score and improve your job description</li>
                     </ol>
                     <p class="mt-3 text-gray-500 dark:text-gray-400 text-xs">
                         💡 The validator provides instant feedback and AI-powered suggestions for improvement.
@@ -477,7 +477,7 @@ function attachPhaseEventListeners(project, phase) {
         await copyToClipboard(markdown);
         showToast('Document copied! Opening validator...', 'success');
         setTimeout(() => {
-          window.open('../validator/', '_blank', 'noopener,noreferrer');
+          window.open('./validator/', '_blank', 'noopener,noreferrer');
         }, 500);
       } catch {
         showToast('Failed to copy. Please try again.', 'error');
