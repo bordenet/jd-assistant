@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JD Validator</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {}
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="css/design-tokens.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-950 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
+  <div id="app" class="flex flex-col h-screen">
+
+    <!-- Header -->
+    <header class="bg-slate-600 dark:bg-slate-900 border-b border-slate-500 dark:border-slate-800 shadow-sm">
+      <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <h1 class="text-3xl font-bold text-white dark:text-white">JD Validator</h1>
+        <div class="flex items-center gap-3">
+          <button
+            id="btn-dark-mode"
+            class="p-2 rounded-lg hover:bg-slate-500 dark:hover:bg-slate-800 transition-colors text-white"
+            aria-label="Toggle dark mode"
+            title="Toggle dark mode"
+          >
+            <svg class="w-6 h-6 hidden dark:block text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+            <svg class="w-6 h-6 dark:hidden text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.536l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.828-2.828a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5.707 5.293a1 1 0 00-1.414 1.414l.707.707A1 1 0 007.414 5.586L5.707 5.293z" clip-rule="evenodd"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-auto p-6">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-slate-800 rounded-lg p-6 shadow-lg">
+          <h2 class="text-xl font-semibold mb-4 text-white">Document Validator</h2>
+          <p class="text-slate-300 mb-4">Paste your document below to validate it against quality criteria.</p>
+
+          <textarea
+            id="document-input"
+            class="w-full h-64 p-4 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Paste your document here..."
+          ></textarea>
+
+          <div class="mt-4 flex gap-4">
+            <button
+              id="btn-validate"
+              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Validate
+            </button>
+            <button
+              id="btn-clear"
+              class="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+
+          <div id="results" class="mt-6 hidden">
+            <h3 class="text-lg font-semibold mb-2 text-white">Validation Results</h3>
+            <div id="results-content" class="bg-slate-900 rounded-lg p-4 text-slate-300"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 border-t border-slate-800 py-4">
+      <div class="max-w-7xl mx-auto px-6 text-center text-slate-400 text-sm">
+        <p>✨ JD Validator - Job Description Quality Checker</p>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
