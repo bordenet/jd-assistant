@@ -22,23 +22,63 @@
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow">
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                    ✨ JD Assistant
-                </h1>
-                <button type="button" id="darkModeToggle"
-                        class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                        title="Toggle Dark Mode"
-                        aria-label="Toggle dark mode">
-                    <span class="dark:hidden">🌙</span>
-                    <span class="hidden dark:inline">☀️</span>
-                </button>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="text-4xl">✨</span>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                            JD Assistant
+                        </h1>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Create effective job descriptions for software engineering positions
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Related Projects Dropdown -->
+                    <div class="relative">
+                        <button type="button" id="related-projects-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Related Projects">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                        </button>
+                        <div id="related-projects-menu" class="hidden absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <div class="p-2">
+                                <div class="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Related Tools</div>
+                                <a href="https://bordenet.github.io/product-requirements-assistant/" class="block px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <div class="font-medium text-gray-900 dark:text-white">PRD Assistant</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Create product requirements documents</div>
+                                </a>
+                                <a href="https://bordenet.github.io/architecture-decision-record/" class="block px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <div class="font-medium text-gray-900 dark:text-white">ADR Tool</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Manage architecture decision records</div>
+                                </a>
+                                <a href="https://bordenet.github.io/pr-faq-assistant/" class="block px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <div class="font-medium text-gray-900 dark:text-white">PR-FAQ Assistant</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Amazon-style press release documents</div>
+                                </a>
+                                <a href="https://bordenet.github.io/one-pager/" class="block px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <div class="font-medium text-gray-900 dark:text-white">One-Pager Assistant</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Create concise one-page documents</div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" id="darkModeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Toggle Dark Mode">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </button>
+                    <button type="button" id="export-all-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Export All
+                    </button>
+                    <button type="button" id="import-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        Import
+                    </button>
+                </div>
             </div>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Create effective job descriptions for software engineering positions
-            </p>
         </div>
     </header>
 
