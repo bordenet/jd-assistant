@@ -303,7 +303,7 @@ function renderPhaseContent(project, phaseNumber) {
                         <span class="text-sm text-gray-600 dark:text-gray-400">
                             Paste response to complete this phase
                         </span>
-                    ` : `<span></span>`}
+                    ` : '<span></span>'}
                     <button
                         id="save-response-btn"
                         class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
