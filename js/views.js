@@ -4,7 +4,7 @@
  * @module views
  */
 
-import { getAllProjects, createProject, deleteProject } from './projects.js';
+import { getAllProjects, createProject, updateProject, getProject, deleteProject } from './projects.js';
 import { formatDate, escapeHtml, confirm, showToast, showDocumentPreviewModal } from './ui.js';
 import { navigateTo } from './router.js';
 import { getFinalMarkdown, getExportFilename } from './workflow.js';
@@ -351,6 +351,201 @@ function setupNewProjectFormListeners() {
     const formData = Object.fromEntries(new FormData(target));
     const project = await createProject(/** @type {import('./types.js').ProjectFormData} */ (formData));
     showToast('Job description created successfully!', 'success');
+    navigateTo('project', project.id);
+  });
+}
+
+/**
+ * Render the edit project form
+ * @param {string} projectId - ID of the project to edit
+ * @returns {Promise<void>}
+ */
+export async function renderEditProjectForm(projectId) {
+  const project = await getProject(projectId);
+  if (!project) {
+    showToast('Job description not found', 'error');
+    navigateTo('home');
+    return;
+  }
+
+  const container = document.getElementById('app-container');
+  if (!container) return;
+  container.innerHTML = getEditProjectFormHTML(project);
+  setupEditProjectFormListeners(project);
+}
+
+/**
+ * Generate HTML for the edit project form
+ * @param {import('./types.js').Project} project - Project to edit
+ * @returns {string} HTML string
+ */
+function getEditProjectFormHTML(project) {
+  return `
+        <div class="max-w-6xl mx-auto">
+            <div class="mb-6">
+                <button id="back-btn" class="text-blue-600 dark:text-blue-400 hover:underline flex items-center">
+                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                    Back to Job Description
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                    Edit Job Description Details
+                </h2>
+
+                <form id="edit-project-form" class="space-y-8">
+                    <!-- Section 1: Role Basics -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                            💼 Role Basics
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="jobTitle" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Job Title <span class="text-red-500">*</span></label>
+                                <input type="text" id="jobTitle" name="jobTitle" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., Senior Software Engineer" value="${escapeHtml(project.jobTitle || '')}">
+                            </div>
+                            <div>
+                                <label for="companyName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="companyName" name="companyName" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., Acme Corp" value="${escapeHtml(project.companyName || '')}">
+                            </div>
+                            <div>
+                                <label for="roleLevel" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role Level</label>
+                                <select id="roleLevel" name="roleLevel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                    <option value="">Select a level...</option>
+                                    <option value="Junior" ${project.roleLevel === 'Junior' ? 'selected' : ''}>Junior</option>
+                                    <option value="Mid" ${project.roleLevel === 'Mid' ? 'selected' : ''}>Mid</option>
+                                    <option value="Senior" ${project.roleLevel === 'Senior' ? 'selected' : ''}>Senior</option>
+                                    <option value="Staff" ${project.roleLevel === 'Staff' ? 'selected' : ''}>Staff</option>
+                                    <option value="Principal" ${project.roleLevel === 'Principal' ? 'selected' : ''}>Principal</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
+                                <input type="text" id="location" name="location" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., Remote / San Francisco, CA" value="${escapeHtml(project.location || '')}">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 2: Responsibilities & Requirements -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                            📋 Responsibilities & Requirements
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="responsibilities" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Key Responsibilities</label>
+                                <textarea id="responsibilities" name="responsibilities" rows="5" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="List 5-8 key responsibilities (one per line)...">${escapeHtml(project.responsibilities || '')}</textarea>
+                            </div>
+                            <div>
+                                <label for="requiredQualifications" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Required Qualifications</label>
+                                <textarea id="requiredQualifications" name="requiredQualifications" rows="4" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="List 3-6 required qualifications (one per line)...">${escapeHtml(project.requiredQualifications || '')}</textarea>
+                            </div>
+                            <div>
+                                <label for="preferredQualifications" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preferred Qualifications</label>
+                                <textarea id="preferredQualifications" name="preferredQualifications" rows="4" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="List 4-8 preferred qualifications (one per line)...">${escapeHtml(project.preferredQualifications || '')}</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 3: Compensation & Benefits -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                            💰 Compensation & Benefits
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="compensationRange" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Compensation Range</label>
+                                <input type="text" id="compensationRange" name="compensationRange" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., $170,000 - $220,000" value="${escapeHtml(project.compensationRange || '')}">
+                            </div>
+                            <div>
+                                <label for="benefits" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Benefits Highlights</label>
+                                <textarea id="benefits" name="benefits" rows="4" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="List key benefits (health insurance, 401k, PTO, etc.)...">${escapeHtml(project.benefits || '')}</textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 4: Optional Context -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                            🔧 Optional Context
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="techStack" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tech Stack</label>
+                                <textarea id="techStack" name="techStack" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., Python, React, PostgreSQL, AWS...">${escapeHtml(project.techStack || '')}</textarea>
+                            </div>
+                            <div>
+                                <label for="teamSize" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Team Size / Structure</label>
+                                <input type="text" id="teamSize" name="teamSize" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., 8-person team, reporting to VP Engineering" value="${escapeHtml(project.teamSize || '')}">
+                            </div>
+                            <div>
+                                <label for="aiSpecifics" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Applied AI Specifics (for AI roles)</label>
+                                <textarea id="aiSpecifics" name="aiSpecifics" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="e.g., LLMs, RAG, fine-tuning, prompt engineering...">${escapeHtml(project.aiSpecifics || '')}</textarea>
+                            </div>
+                            <div>
+                                <label for="careerLadder" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Career Ladder (Optional)</label>
+                                <textarea id="careerLadder" name="careerLadder" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Company career ladder for accurate leveling...">${escapeHtml(project.careerLadder || '')}</textarea>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">💡 Relaxed validation - helps with accurate role leveling</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section 5: Company-Mandated Content -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
+                            ⚖️ Company-Mandated Content
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="companyPreamble" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Preamble</label>
+                                <textarea id="companyPreamble" name="companyPreamble" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="EEO statements, diversity commitments (appears at start of JD)...">${escapeHtml(project.companyPreamble || '')}</textarea>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">💡 Relaxed validation - company-required content</p>
+                            </div>
+                            <div>
+                                <label for="companyLegalText" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Legal Text</label>
+                                <textarea id="companyLegalText" name="companyLegalText" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Disclaimers, legal notices (appears at end of JD)...">${escapeHtml(project.companyLegalText || '')}</textarea>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">💡 Relaxed validation - company-required content</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Submit Buttons -->
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <button type="button" id="cancel-btn" class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Set up event listeners for the edit project form
+ * @param {import('./types.js').Project} project - Project being edited
+ * @returns {void}
+ */
+function setupEditProjectFormListeners(project) {
+  document.getElementById('back-btn')?.addEventListener('click', () => navigateTo('project', project.id));
+  document.getElementById('cancel-btn')?.addEventListener('click', () => navigateTo('project', project.id));
+
+  // Form submission
+  const form = document.getElementById('edit-project-form');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const target = /** @type {HTMLFormElement} */ (e.target);
+    const formData = Object.fromEntries(new FormData(target));
+    // Update title based on job title and company name
+    formData.title = `JD - ${formData.jobTitle} at ${formData.companyName}`;
+    await updateProject(project.id, formData);
+    showToast('Job description updated successfully!', 'success');
     navigateTo('project', project.id);
   });
 }
