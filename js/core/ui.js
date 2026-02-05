@@ -281,7 +281,7 @@ export function showToast(message, type = 'info', duration = 3000) {
   };
 
   const toast = document.createElement('div');
-  toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg pointer-events-auto transform transition-all duration-300 translate-x-full opacity-0 max-w-sm`;
+  toast.className = `${colors[type] || colors.info} text-white px-4 py-3 rounded-lg shadow-lg pointer-events-auto transform transition-all duration-300 translate-x-full opacity-0`;
   toast.textContent = message;
 
   container.appendChild(toast);
