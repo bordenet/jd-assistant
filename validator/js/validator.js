@@ -13,12 +13,18 @@ export { calculateSlopScore };
 /**
  * Validate a job description and return a score with feedback
  * @param {string} text - The JD text to validate
+ * @param {string} [postingType='external'] - Whether this is an 'internal' or 'external' posting
  * @returns {Object} Validation result with score, grade, and feedback
  */
-export function validateDocument(text) {
+export function validateDocument(text, postingType = 'external') {
   const feedback = [];
   let score = 100; // Start at 100, deduct for issues
   const deductions = [];
+
+  // Detect internal posting from text if not explicitly specified
+  const isInternal = postingType === 'internal' ||
+                     /\*\*INTERNAL POSTING\*\*/i.test(text) ||
+                     /internal posting/i.test(text);
 
   // Get JD content validation (inclusive language, red flags)
   const jdValidation = validateJDContent(text);
@@ -72,17 +78,21 @@ export function validateDocument(text) {
     feedback.push('✅ No red flag phrases');
   }
 
-  // 5. Check for compensation range (-10 pts if missing)
-  const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
-                          /salary.*\$[\d,]+/i.test(text) ||
-                          /compensation.*\$[\d,]+/i.test(text) ||
-                          /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
-  if (hasCompensation) {
-    feedback.push('✅ Compensation range included');
+  // 5. Check for compensation range (-10 pts if missing) - skip for internal postings
+  if (!isInternal) {
+    const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
+                            /salary.*\$[\d,]+/i.test(text) ||
+                            /compensation.*\$[\d,]+/i.test(text) ||
+                            /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
+    if (hasCompensation) {
+      feedback.push('✅ Compensation range included');
+    } else {
+      score -= 10;
+      deductions.push('-10 pts: No compensation range found');
+      feedback.push('⚠️ No compensation range found');
+    }
   } else {
-    score -= 10;
-    deductions.push('-10 pts: No compensation range found');
-    feedback.push('⚠️ No compensation range found');
+    feedback.push('ℹ️ Internal posting - compensation check skipped');
   }
 
   // 6. Check for encouragement statement (-5 pts if missing)
@@ -95,31 +105,22 @@ export function validateDocument(text) {
     feedback.push('⚠️ Missing encouragement statement (e.g., "If you meet 60-70%...")');
   }
 
-  // 7. Check for required sections
-  const hasResponsibilities = /responsibilities|what you'll do|key duties/i.test(text);
-  const hasRequirements = /required|qualifications|requirements/i.test(text);
-  const hasBenefits = /benefits|what we offer|perks|compensation/i.test(text);
-
-  if (hasResponsibilities && hasRequirements && hasBenefits) {
-    feedback.push('✅ All key sections present');
-  } else {
-    const missing = [];
-    if (!hasResponsibilities) missing.push('Responsibilities');
-    if (!hasRequirements) missing.push('Requirements');
-    if (!hasBenefits) missing.push('Benefits');
-    score -= missing.length * 5;
-    deductions.push(`-${missing.length * 5} pts: Missing sections: ${missing.join(', ')}`);
-    feedback.push(`⚠️ Missing sections: ${missing.join(', ')}`);
-  }
-
   // AI slop detection - JDs should be authentic and specific
+  // Aligned with inline validator: Math.min(5, Math.floor(penalty * 0.6))
   const slopPenalty = getSlopPenalty(text);
+  let slopDeduction = 0;
+  const slopIssues = [];
+
   if (slopPenalty.penalty > 0) {
-    // Apply penalty (max 10 points for JDs)
-    const slopDeduction = Math.min(10, slopPenalty.penalty);
+    slopDeduction = Math.min(5, Math.floor(slopPenalty.penalty * 0.6));
+    if (slopPenalty.issues && slopPenalty.issues.length > 0) {
+      slopIssues.push(...slopPenalty.issues.slice(0, 2));
+    }
     score -= slopDeduction;
-    deductions.push(`-${slopDeduction} pts: AI slop detected (${slopPenalty.details.details.totalPatterns} patterns)`);
-    feedback.push(`⚠️ AI-generated language detected - consider making more authentic`);
+    if (slopDeduction > 0) {
+      deductions.push(`-${slopDeduction} pts: AI slop detected`);
+      feedback.push(`⚠️ AI-generated language detected - consider making more authentic`);
+    }
   }
 
   // Floor score at 0
@@ -133,7 +134,12 @@ export function validateDocument(text) {
     wordCount,
     warnings: jdValidation.warnings,
     warningCount: jdValidation.warnings.length,
-    slopDetection: slopPenalty
+    isInternal,
+    slopDetection: {
+      ...slopPenalty,
+      deduction: slopDeduction,
+      issues: slopIssues
+    }
   };
 }
 
