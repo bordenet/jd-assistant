@@ -1,9 +1,14 @@
 /**
  * JD Validator - Minimal validation for Phase 4 completion
- * 
+ *
  * This is a lightweight version of the validator for use in the assistant.
  * For full validation, use the standalone validator app.
  */
+
+import { getSlopPenalty, calculateSlopScore } from './slop-detection.js';
+
+// Re-export for direct access
+export { calculateSlopScore };
 
 // Masculine-coded words that discourage women from applying
 const MASCULINE_CODED = [
@@ -149,6 +154,19 @@ export function validateJD(text, postingType = 'external') {
     issues.push('Missing encouragement statement');
   }
 
+  // AI slop detection
+  const slopPenalty = getSlopPenalty(text);
+  let slopDeduction = 0;
+  const slopIssues = [];
+
+  if (slopPenalty.penalty > 0) {
+    slopDeduction = Math.min(5, Math.floor(slopPenalty.penalty * 0.6));
+    if (slopPenalty.issues.length > 0) {
+      slopIssues.push(...slopPenalty.issues.slice(0, 2));
+    }
+    score -= slopDeduction;
+  }
+
   score = Math.max(0, score);
 
   const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
@@ -195,7 +213,12 @@ export function validateJD(text, postingType = 'external') {
     length: categories.length,
     inclusivity: categories.inclusivity,
     culture: categories.culture,
-    transparency: categories.transparency
+    transparency: categories.transparency,
+    slopDetection: {
+      ...slopPenalty,
+      deduction: slopDeduction,
+      issues: slopIssues
+    }
   };
 }
 
