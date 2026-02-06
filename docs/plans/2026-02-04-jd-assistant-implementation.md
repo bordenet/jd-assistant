@@ -11,7 +11,7 @@
 
 **Tech Stack:** Vanilla JS, Tailwind CSS, Jest for testing
 
-**Research Reference:** `docs/JD-RESEARCH-2025.md` (657 lines of synthesized best practices)
+**Research Reference:** `docs/About.md` (657 lines of synthesized best practices)
 
 ---
 
@@ -44,7 +44,7 @@
 1. **Project Location:** `genesis-tools/jd-assistant/`
 2. **This is a learning exercise** — document friction in `genesis/CONTINUOUS_IMPROVEMENT.md`
 3. **No remote operations** until explicit user approval
-4. **Research document:** `docs/JD-RESEARCH-2025.md` (657 lines of JD best practices)
+4. **Research document:** `docs/About.md` (657 lines of JD best practices)
 5. **Baseline tests pass:** 286 tests, 58.55% coverage, lint clean
 
 ### User Requirements (MUST preserve)
@@ -366,7 +366,7 @@ describe('JD Validator - Inclusive Language', () => {
 
 ### Step 4.2: Implement validation rules
 
-Add word lists and validation logic based on `docs/JD-RESEARCH-2025.md`.
+Add word lists and validation logic based on `docs/About.md`.
 
 ### Step 4.3: Run tests
 

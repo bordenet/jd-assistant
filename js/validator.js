@@ -2,7 +2,7 @@
  * JD Validator - Validation Logic
  *
  * Validates job descriptions for inclusive language, structure, and best practices.
- * Based on research from JD-RESEARCH-2025.md.
+ * Based on research from docs/About.md.
  */
 
 import { calculateSlopScore, getSlopPenalty } from './slop-detection.js';
