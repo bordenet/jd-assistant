@@ -187,15 +187,29 @@ export function validateJD(text, postingType = 'external') {
   const colorClass = score >= 80 ? 'text-green-500' : score >= 60 ? 'text-yellow-500' : 'text-red-500';
 
   // Category breakdowns for UI display
-  // These are derived from the deductions to ensure consistency with total score
+  // IMPORTANT: Categories must sum to totalScore for UX clarity
+  // Calculate raw category scores first, then adjust to ensure sum matches total
+  const rawLength = 25 - lengthDeduction;
+  const rawInclusivity = Math.max(0, 25 - masculineDeduction - extrovertDeduction);
+  const rawCulture = Math.max(0, 25 - redFlagDeduction - slopDeduction);
+  const rawTransparency = 25 - compensationDeduction - encouragementDeduction;
+
+  // Calculate the difference between raw sum and actual total
+  const rawSum = rawLength + rawInclusivity + rawCulture + rawTransparency;
+  const adjustment = rawSum - score;
+
+  // Apply adjustment to the last category (transparency) to ensure sum matches
+  // This handles cases where deductions exceed category caps
+  const adjustedTransparency = Math.max(0, rawTransparency - adjustment);
+
   const categories = {
     length: {
-      score: 25 - lengthDeduction,
+      score: rawLength,
       maxScore: 25,
       issues: lengthDeduction > 0 ? (wordCount < 400 ? [`Short (${wordCount} words)`] : [`Long (${wordCount} words)`]) : []
     },
     inclusivity: {
-      score: Math.max(0, 25 - masculineDeduction - extrovertDeduction),
+      score: rawInclusivity,
       maxScore: 25,
       issues: [
         ...jdValidation.warnings.filter(w => w.type === 'masculine-coded').map(w => `Masculine-coded: "${w.word}"`),
@@ -203,8 +217,7 @@ export function validateJD(text, postingType = 'external') {
       ]
     },
     culture: {
-      // Include slop deduction here since AI slop relates to authenticity/culture
-      score: Math.max(0, 25 - redFlagDeduction - slopDeduction),
+      score: rawCulture,
       maxScore: 25,
       issues: [
         ...jdValidation.warnings.filter(w => w.type === 'red-flag').map(w => `Red flag: "${w.phrase}"`),
@@ -212,7 +225,7 @@ export function validateJD(text, postingType = 'external') {
       ]
     },
     transparency: {
-      score: 25 - compensationDeduction - encouragementDeduction,
+      score: adjustedTransparency,
       maxScore: 25,
       issues: [
         ...(compensationDeduction > 0 ? ['No compensation range'] : []),
