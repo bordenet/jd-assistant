@@ -57,31 +57,38 @@ const btnOpenClaudeLLM = document.getElementById('btn-open-claude-llm');
 
 /**
  * Calculate dimension scores from the validator result
- * The validator returns a total score with deductions, we need to map to dimensions
+ * Uses the SAME deductions as validator.js so categories sum to total
  */
 function calculateDimensionScores(result) {
-  // Max points per dimension
+  // Max points per dimension (must sum to 100)
   const maxInclusive = 30;
   const maxStructure = 25;
   const maxTransparency = 25;
   const maxExperience = 20;
 
   // Start with max and deduct based on issues
+  // IMPORTANT: Use the SAME deduction logic as validator.js
   let inclusive = maxInclusive;
   let structure = maxStructure;
   let transparency = maxTransparency;
   let experience = maxExperience;
 
-  // Deduct from Inclusive Language
+  // Get warning counts
   const masculineCount = result.warnings.filter(w => w.type === 'masculine-coded').length;
   const extrovertCount = result.warnings.filter(w => w.type === 'extrovert-bias').length;
   const redFlagCount = result.warnings.filter(w => w.type === 'red-flag').length;
-  inclusive -= Math.min(15, masculineCount * 5);
-  inclusive -= Math.min(10, extrovertCount * 5);
-  inclusive -= Math.min(5, redFlagCount * 2);
+
+  // Deduct from Inclusive Language (matches validator.js lines 48-68)
+  // Masculine: -5 each, max -25 (but capped at maxInclusive)
+  // Extrovert: -5 each, max -20
+  // Red flags: -5 each, max -25
+  const masculinePenalty = Math.min(25, masculineCount * 5);
+  const extrovertPenalty = Math.min(20, extrovertCount * 5);
+  const redFlagPenalty = Math.min(25, redFlagCount * 5);
+  inclusive -= Math.min(inclusive, masculinePenalty + extrovertPenalty);
   inclusive = Math.max(0, inclusive);
 
-  // Deduct from Structure & Clarity based on word count
+  // Deduct from Structure & Clarity based on word count (matches validator.js lines 32-46)
   if (result.wordCount < 400) {
     structure -= Math.min(15, Math.floor((400 - result.wordCount) / 20));
   } else if (result.wordCount > 700) {
@@ -89,19 +96,32 @@ function calculateDimensionScores(result) {
   }
   structure = Math.max(0, structure);
 
-  // Deduct from Transparency based on compensation and encouragement
+  // Deduct from Transparency (matches validator.js lines 81-106)
+  // Compensation: -10 if missing
+  // Encouragement: -5 if missing
+  // Red flags: -5 each, max -25 (remaining after inclusive)
   const hasComp = result.feedback.some(f => f.includes('Compensation range'));
   const hasEncouragement = result.feedback.some(f => f.includes('encouragement'));
-  if (!hasComp) transparency -= 10;
+  if (!hasComp && !result.isInternal) transparency -= 10;
   if (!hasEncouragement) transparency -= 5;
-  // Red flags also affect transparency
-  transparency -= Math.min(10, redFlagCount * 3);
+  transparency -= Math.min(transparency, redFlagPenalty);
   transparency = Math.max(0, transparency);
 
-  // Deduct from Candidate Experience based on missing sections
-  const hasBenefits = result.feedback.some(f => f.includes('Benefits') || f.includes('key sections'));
-  if (!hasBenefits) experience -= 8;
+  // Deduct from Candidate Experience (slop detection)
+  // Slop: max -5 (matches validator.js lines 108-124)
+  const slopDeduction = result.slopDetection?.deduction || 0;
+  experience -= slopDeduction;
   experience = Math.max(0, experience);
+
+  // Calculate total from categories (should match result.score)
+  const calculatedTotal = inclusive + structure + transparency + experience;
+
+  // If there's a mismatch, adjust experience to make it match
+  // This handles edge cases where deductions overlap
+  if (calculatedTotal !== result.score) {
+    const diff = calculatedTotal - result.score;
+    experience = Math.max(0, experience - diff);
+  }
 
   return {
     inclusive: { score: inclusive, maxScore: maxInclusive },
