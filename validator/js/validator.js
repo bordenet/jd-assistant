@@ -119,7 +119,7 @@ export function validateDocument(text, postingType = 'external') {
     score -= slopDeduction;
     if (slopDeduction > 0) {
       deductions.push(`-${slopDeduction} pts: AI slop detected`);
-      feedback.push(`⚠️ AI-generated language detected - consider making more authentic`);
+      feedback.push('⚠️ AI-generated language detected - consider making more authentic');
     }
   }
 

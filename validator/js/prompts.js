@@ -12,16 +12,16 @@ export function generateLLMScoringPrompt(jdContent, postingType = 'external') {
   const isInternal = postingType === 'internal';
 
   const internalNote = isInternal
-    ? `\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT penalize for missing compensation range or benefits details - internal candidates already have access to this information through company systems.\n`
+    ? '\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT penalize for missing compensation range or benefits details - internal candidates already have access to this information through company systems.\n'
     : '';
 
   const compensationSection = isInternal
-    ? `- **Compensation (0 pts)**: N/A for internal postings`
-    : `- **Compensation (10 pts)**: Salary range clearly stated`;
+    ? '- **Compensation (0 pts)**: N/A for internal postings'
+    : '- **Compensation (10 pts)**: Salary range clearly stated';
 
   const benefitsSection = isInternal
-    ? `- **Benefits Detail (0 pts)**: N/A for internal postings`
-    : `- **Benefits Detail (8 pts)**: Specific benefits, not just "competitive"`;
+    ? '- **Benefits Detail (0 pts)**: N/A for internal postings'
+    : '- **Benefits Detail (8 pts)**: Specific benefits, not just "competitive"';
 
   const transparencyTotal = isInternal ? '15' : '25';
   const candidateExpTotal = isInternal ? '12' : '20';
@@ -123,16 +123,16 @@ export function generateCritiquePrompt(jdContent, currentResult, postingType = '
     .join('\n');
 
   const internalNote = isInternal
-    ? `\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT critique missing compensation range or benefits details - internal candidates already have access to this information through company systems.\n`
+    ? '\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT critique missing compensation range or benefits details - internal candidates already have access to this information through company systems.\n'
     : '';
 
   const transparencySection = isInternal
-    ? `   - Transparency: Requirements honesty (compensation/benefits N/A for internal)`
-    : `   - Transparency: Compensation, requirements honesty`;
+    ? '   - Transparency: Requirements honesty (compensation/benefits N/A for internal)'
+    : '   - Transparency: Compensation, requirements honesty';
 
   const candidateExpSection = isInternal
-    ? `   - Candidate Experience: Growth opportunities, application process (benefits N/A for internal)`
-    : `   - Candidate Experience: Benefits, growth, process`;
+    ? '   - Candidate Experience: Growth opportunities, application process (benefits N/A for internal)'
+    : '   - Candidate Experience: Benefits, growth, process';
 
   return `You are a senior HR professional and DEI specialist providing detailed feedback on a Job Description.
 ${internalNote}
@@ -175,16 +175,16 @@ export function generateRewritePrompt(jdContent, currentResult, postingType = 'e
   const isInternal = postingType === 'internal';
 
   const internalNote = isInternal
-    ? `\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT include salary range or benefits details - internal candidates already have access to this information through company systems.\n`
+    ? '\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT include salary range or benefits details - internal candidates already have access to this information through company systems.\n'
     : '';
 
   const compensationReq = isInternal
-    ? `6. **SKIP**: Salary range (internal posting - not needed)`
-    : `6. Includes a clear salary range`;
+    ? '6. **SKIP**: Salary range (internal posting - not needed)'
+    : '6. Includes a clear salary range';
 
   const benefitsReq = isInternal
-    ? `9. **SKIP**: Specific benefits listing (internal posting - not needed)`
-    : `9. Lists specific, quantified benefits`;
+    ? '9. **SKIP**: Specific benefits listing (internal posting - not needed)'
+    : '9. Lists specific, quantified benefits';
 
   return `You are a senior HR professional rewriting a Job Description to achieve a score of 85+.
 ${internalNote}
