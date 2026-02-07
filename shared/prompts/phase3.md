@@ -2,6 +2,15 @@
 
 You are synthesizing a job description from an initial draft and adversarial review into the final, polished document.
 
+<output_rules>
+Output ONLY the final job description in markdown format.
+- NO preambles ("Here's the final version...", "I've synthesized...")
+- NO sign-offs ("Let me know if...", "Feel free to...")
+- NO markdown code fences (```) around the output
+- Begin directly with # [Job Title]
+This is copy-paste ready output. Violations make it unusable.
+</output_rules>
+
 **Posting Type:** {{POSTING_TYPE}}
 
 > ⚠️ **INTERNAL POSTING NOTE:** If the Posting Type above is "internal", the final job description should NOT include compensation range or benefits details. Internal candidates already have access to this information through company systems. Omit the "What We Offer" section or limit it to non-compensation items like career growth opportunities.
@@ -35,21 +44,20 @@ Your task: Create the FINAL job description that incorporates all valid critique
 
 ---
 
-## ⚠️ FINAL Inclusive Language Sweep
+## ⚠️ FINAL Inclusive Language Sweep (JS Validator Aligned)
 
-Before finalizing, eliminate ALL remaining issues:
+Before finalizing, eliminate ALL remaining issues using the EXACT JS validator word lists:
 
 ### Zero Tolerance Patterns
 
-**These MUST NOT appear in final output:**
+**Masculine-coded (BANNED - 5 pts each, max -25):**
+aggressive, ambitious, assertive, competitive, confident, decisive, determined, dominant, driven, fearless, independent, ninja, rockstar, guru, self-reliant, self-sufficient, superior, leader, go-getter, hard-charging, strong, tough, warrior, superhero, superstar, boss
 
-| Category | Banned Examples |
-|----------|-----------------|
-| Masculine-coded words | aggressive, ambitious, ninja, rockstar, guru, go-getter, strong, tough |
-| Neurodiversity-excluding | fast-paced, self-starter, thrives in ambiguity, assertive communicator |
-| Red flag phrases | like a family, passion required, young/dynamic team, wear many hats |
-| Vague requirements | "strong X skills", "various tasks", "as needed" |
-| Gatekeeping language | "must have X years", "requires Y years" (use "experience with" instead) |
+**Extrovert-bias (BANNED - 5 pts each, max -20):**
+outgoing, high-energy, energetic, people person, gregarious, strong communicator, excellent verbal, team player, social butterfly, thrives in ambiguity, flexible (without specifics), adaptable (without specifics)
+
+**Red flags (BANNED - 5 pts each, max -25):**
+fast-paced, like a family, wear many hats, always-on, hustle, grind, unlimited pto, work hard play hard, hit the ground running, self-starter, thick skin, no ego, drama-free, whatever it takes, passion required, young dynamic team, work family, family first, 10x engineer, bro culture, party hard
 
 ### Required Patterns
 

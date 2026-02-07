@@ -11,17 +11,20 @@ import { getSlopPenalty, calculateSlopScore } from './slop-detection.js';
 export { calculateSlopScore };
 
 // Masculine-coded words that discourage women from applying
+// Source: Textio, GenderDecoder research
 const MASCULINE_CODED = [
   'aggressive', 'ambitious', 'assertive', 'competitive', 'confident',
   'decisive', 'determined', 'dominant', 'driven', 'fearless',
   'independent', 'ninja', 'rockstar', 'guru', 'self-reliant',
-  'self-sufficient', 'superior'
+  'self-sufficient', 'superior', 'leader', 'go-getter', 'hard-charging',
+  'strong', 'tough', 'warrior', 'superhero', 'superstar', 'boss'
 ];
 
 // Extrovert-bias phrases that discourage introverts and neurodivergent candidates
 const EXTROVERT_BIAS = [
   'outgoing', 'high-energy', 'energetic', 'people person', 'gregarious',
-  'strong communicator', 'excellent verbal', 'team player'
+  'strong communicator', 'excellent verbal', 'team player', 'social butterfly',
+  'thrives in ambiguity', 'flexible', 'adaptable'
 ];
 
 // Red flag phrases that signal toxic culture or poor work-life balance
@@ -29,7 +32,9 @@ const RED_FLAGS = [
   'fast-paced', 'like a family', 'wear many hats', 'always-on',
   'hustle', 'grind', 'unlimited pto', 'work hard play hard',
   'hit the ground running', 'self-starter', 'thick skin',
-  'no ego', 'drama-free', 'whatever it takes', 'passion required'
+  'no ego', 'drama-free', 'whatever it takes', 'passion required',
+  'young dynamic team', 'work family', 'family first', '10x engineer',
+  'bro culture', 'party hard'
 ];
 
 /**

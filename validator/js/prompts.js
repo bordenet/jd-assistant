@@ -12,66 +12,45 @@ export function generateLLMScoringPrompt(jdContent, postingType = 'external') {
   const isInternal = postingType === 'internal';
 
   const internalNote = isInternal
-    ? '\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT penalize for missing compensation range or benefits details - internal candidates already have access to this information through company systems.\n'
+    ? '\n> ⚠️ **INTERNAL POSTING**: Do NOT penalize for missing compensation range - internal candidates have access through company systems.\n'
     : '';
 
-  const compensationSection = isInternal
-    ? '- **Compensation (0 pts)**: N/A for internal postings'
-    : '- **Compensation (10 pts)**: Salary range clearly stated';
+  const compensationRule = isInternal
+    ? '- **Compensation**: N/A for internal postings (no deduction)'
+    : '- **Compensation (-10 pts)**: Deduct 10 if no salary range (e.g., "$150,000 - $200,000")';
 
-  const benefitsSection = isInternal
-    ? '- **Benefits Detail (0 pts)**: N/A for internal postings'
-    : '- **Benefits Detail (8 pts)**: Specific benefits, not just "competitive"';
-
-  const transparencyTotal = isInternal ? '15' : '25';
-  const candidateExpTotal = isInternal ? '12' : '20';
-  const totalPossible = isInternal ? '82' : '100';
-
-  const calibrationGuidance = isInternal
-    ? `## CALIBRATION GUIDANCE
-- Be HARSH. Most JDs score 40-60. Only exceptional ones score 80+.
-- A score of 70+ means ready for diverse candidate attraction.
-- Deduct 5 points for EACH masculine-coded word found.
-- Deduct 5 points for EACH red flag phrase found.
-- **DO NOT deduct for missing salary range (internal posting).**
-- **DO NOT deduct for missing benefits detail (internal posting).**
-- Reward explicit encouragement for underrepresented candidates.`
-    : `## CALIBRATION GUIDANCE
-- Be HARSH. Most JDs score 40-60. Only exceptional ones score 80+.
-- A score of 70+ means ready for diverse candidate attraction.
-- Deduct 5 points for EACH masculine-coded word found.
-- Deduct 5 points for EACH red flag phrase found.
-- Deduct 10 points if no salary range is provided.
-- Reward explicit encouragement for underrepresented candidates.
-- Reward specific, quantified benefits over vague promises.`;
-
+  // ALIGNED WITH jd-validator.js: Length(25) + Inclusivity(25) + Culture(25) + Transparency(25) = 100
   return `You are an expert HR professional and DEI specialist evaluating a Job Description.
 ${internalNote}
-Score this Job Description using the following rubric (0-${totalPossible} points total):
+<output_rules>
+Output ONLY the scoring in the exact format below. NO preambles, NO explanations beyond category justifications, NO sign-offs. Begin directly with **TOTAL SCORE**.
+</output_rules>
 
-## SCORING RUBRIC
+## SCORING RUBRIC (100 points total)
 
-### 1. Inclusive Language (30 points)
-- **Gender-Neutral (10 pts)**: No masculine-coded words (aggressive, ninja, rockstar, etc.)
-- **Neurodiversity-Friendly (10 pts)**: No extrovert-bias phrases (outgoing, high-energy, etc.)
-- **Culture Signals (10 pts)**: No red flags (fast-paced, like a family, hustle, etc.)
+Score this Job Description using these EXACT categories that match our JavaScript validator:
 
-### 2. Structure & Clarity (25 points)
-- **Clear Sections (10 pts)**: Responsibilities, Requirements, Benefits clearly defined
-- **Concise Length (10 pts)**: 400-700 words (not too short, not too long)
-- **Readable Format (5 pts)**: Bullet points, clear hierarchy, scannable
+### 1. Length (25 points max)
+- **Optimal (25 pts)**: 400-700 words
+- **Too Short**: Deduct 1 pt per 20 words below 400 (max -15)
+- **Too Long**: Deduct 1 pt per 50 words above 700 (max -10)
 
-### 3. Transparency (${transparencyTotal} points)
-${compensationSection}
-- **Requirements Honesty (10 pts)**: Distinguishes must-have vs nice-to-have
-- **Encouragement (5 pts)**: Includes "60-70%" encouragement statement
+### 2. Inclusivity (25 points max)
+- **Masculine-coded words (-5 pts each, max -25)**: aggressive, ambitious, assertive, competitive, confident, decisive, determined, dominant, driven, fearless, independent, ninja, rockstar, guru, self-reliant, self-sufficient, superior
+- **Extrovert-bias phrases (-5 pts each, max -20)**: outgoing, high-energy, energetic, people person, gregarious, strong communicator, excellent verbal, team player
 
-### 4. Candidate Experience (${candidateExpTotal} points)
-${benefitsSection}
-- **Growth Path (6 pts)**: Career development opportunities mentioned
-- **Application Process (6 pts)**: Clear next steps and timeline
+### 3. Culture (25 points max)
+- **Red flag phrases (-5 pts each, max -25)**: fast-paced, like a family, wear many hats, always-on, hustle, grind, unlimited pto, work hard play hard, hit the ground running, self-starter, thick skin, no ego, drama-free, whatever it takes, passion required
+- **AI slop patterns (-1 to -5 pts)**: Vague platitudes, repetitive phrasing, hollow specificity
 
-${calibrationGuidance}
+### 4. Transparency (25 points max)
+${compensationRule}
+- **Encouragement (-5 pts)**: Deduct 5 if missing "60-70% of qualifications" encouragement statement
+
+## CALIBRATION
+- Be HARSH. Most JDs score 40-60. Only exceptional ones score 80+.
+- Count EACH instance of masculine-coded/extrovert-bias/red-flag terms.
+- A score of 70+ means ready for diverse candidate attraction.
 
 ## JOB DESCRIPTION TO EVALUATE
 
@@ -81,21 +60,19 @@ ${jdContent}
 
 ## REQUIRED OUTPUT FORMAT
 
-Provide your evaluation in this exact format:
+**TOTAL SCORE: [X]/100**
 
-**TOTAL SCORE: [X]/${totalPossible}**
+### Length: [X]/25
+Word count: [N]. [1 sentence justification]
 
-### Inclusive Language: [X]/30
-[2-3 sentence justification]
+### Inclusivity: [X]/25
+[List any masculine-coded or extrovert-bias terms found. 1-2 sentence justification]
 
-### Structure & Clarity: [X]/25
-[2-3 sentence justification]
+### Culture: [X]/25
+[List any red flags or slop patterns found. 1-2 sentence justification]
 
-### Transparency: [X]/${transparencyTotal}
-[2-3 sentence justification]
-
-### Candidate Experience: [X]/${candidateExpTotal}
-[2-3 sentence justification]
+### Transparency: [X]/25
+[Note compensation presence and encouragement statement. 1-2 sentence justification]
 
 ### Top 3 Issues
 1. [Most critical issue]
@@ -119,27 +96,28 @@ export function generateCritiquePrompt(jdContent, currentResult, postingType = '
   const isInternal = postingType === 'internal';
   const warningsList = (currentResult.warnings || [])
     .slice(0, 5)
-    .map(w => `- ${w.type}: "${w.word || w.phrase}" - ${w.suggestion}`)
+    .map(w => `- ${w.type}: "${w.word || w.phrase}"`)
     .join('\n');
 
   const internalNote = isInternal
-    ? '\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT critique missing compensation range or benefits details - internal candidates already have access to this information through company systems.\n'
+    ? '\n> ⚠️ **INTERNAL POSTING**: Do NOT critique missing compensation - internal candidates have access through company systems.\n'
     : '';
 
   const transparencySection = isInternal
-    ? '   - Transparency: Requirements honesty (compensation/benefits N/A for internal)'
-    : '   - Transparency: Compensation, requirements honesty';
+    ? '   - Transparency (25 pts): Encouragement statement (compensation N/A for internal)'
+    : '   - Transparency (25 pts): Compensation range, encouragement statement';
 
-  const candidateExpSection = isInternal
-    ? '   - Candidate Experience: Growth opportunities, application process (benefits N/A for internal)'
-    : '   - Candidate Experience: Benefits, growth, process';
-
+  // ALIGNED WITH jd-validator.js categories
   return `You are a senior HR professional and DEI specialist providing detailed feedback on a Job Description.
 ${internalNote}
+<output_rules>
+Output your critique in the exact format below. NO preambles ("Here's my..."), NO sign-offs. Begin directly with ## CURRENT VALIDATION RESULTS.
+</output_rules>
+
 ## CURRENT VALIDATION RESULTS
 Total Score: ${currentResult.score}/100
 Grade: ${currentResult.grade}
-Word Count: ${currentResult.wordCount}
+Word Count: ${currentResult.wordCount || 'Unknown'}
 
 Key issues detected:
 ${warningsList || '- None detected by automated scan'}
@@ -152,16 +130,19 @@ ${jdContent}
 
 ## YOUR TASK
 
-Provide:
+Provide critique using these EXACT categories (matching our JavaScript validator):
+
 1. **Executive Summary** (2-3 sentences on overall JD quality)
-2. **Detailed Critique** by dimension:
-   - Inclusive Language: What works, what needs improvement
-   - Structure & Clarity: Organization and readability
+
+2. **Detailed Critique by JS Scoring Category**:
+   - Length (25 pts): Word count assessment (target: 400-700 words)
+   - Inclusivity (25 pts): Masculine-coded words, extrovert-bias phrases
+   - Culture (25 pts): Red flag phrases, AI slop patterns
 ${transparencySection}
-${candidateExpSection}
+
 3. **Revised Job Description** - A complete rewrite addressing all issues
 
-Be specific. Show exact rewrites. Make it ready to attract diverse, qualified candidates.`;
+Be specific. Quote exact terms that need fixing. Make it ready to attract diverse candidates.`;
 }
 
 /**
@@ -175,19 +156,20 @@ export function generateRewritePrompt(jdContent, currentResult, postingType = 'e
   const isInternal = postingType === 'internal';
 
   const internalNote = isInternal
-    ? '\n> ⚠️ **INTERNAL POSTING**: This is an INTERNAL job posting. Do NOT include salary range or benefits details - internal candidates already have access to this information through company systems.\n'
+    ? '\n> ⚠️ **INTERNAL POSTING**: Do NOT include salary range - internal candidates have access through company systems.\n'
     : '';
 
   const compensationReq = isInternal
-    ? '6. **SKIP**: Salary range (internal posting - not needed)'
-    : '6. Includes a clear salary range';
+    ? '- **Compensation**: SKIP (internal posting)'
+    : '- **Compensation**: Include clear salary range (e.g., "$150,000 - $200,000")';
 
-  const benefitsReq = isInternal
-    ? '9. **SKIP**: Specific benefits listing (internal posting - not needed)'
-    : '9. Lists specific, quantified benefits';
-
-  return `You are a senior HR professional rewriting a Job Description to achieve a score of 85+.
+  // ALIGNED WITH jd-validator.js scoring categories
+  return `You are a senior HR professional rewriting a Job Description to achieve a score of 85+/100.
 ${internalNote}
+<output_rules>
+Output ONLY the rewritten Job Description in markdown format. NO preambles ("Here's the revised..."), NO code fences (\`\`\`), NO sign-offs. Begin directly with # [Job Title].
+</output_rules>
+
 ## CURRENT SCORE: ${currentResult.score}/100
 
 ## ORIGINAL JOB DESCRIPTION
@@ -196,22 +178,31 @@ ${internalNote}
 ${jdContent}
 \`\`\`
 
-## REWRITE REQUIREMENTS
+## SCORING TARGET (must achieve 85+/100)
 
-Create a complete, polished Job Description that:
-1. Is 400-700 words (concise but comprehensive)
-2. Has all required sections (Responsibilities, Requirements${isInternal ? '' : ', Benefits'})
-3. Uses ZERO masculine-coded words (no aggressive, ninja, rockstar, etc.)
-4. Uses ZERO extrovert-bias phrases (no outgoing, high-energy, etc.)
-5. Uses ZERO red flag phrases (no fast-paced, like a family, hustle, etc.)
+Your rewrite must optimize for these JS validator categories:
+
+### Length (25 pts target)
+- 400-700 words exactly
+
+### Inclusivity (25 pts target)
+- ZERO masculine-coded words: aggressive, ambitious, assertive, competitive, confident, decisive, determined, dominant, driven, fearless, independent, ninja, rockstar, guru, self-reliant, self-sufficient, superior
+- ZERO extrovert-bias phrases: outgoing, high-energy, energetic, people person, gregarious, strong communicator, excellent verbal, team player
+
+### Culture (25 pts target)
+- ZERO red flag phrases: fast-paced, like a family, wear many hats, always-on, hustle, grind, unlimited pto, work hard play hard, hit the ground running, self-starter, thick skin, no ego, drama-free, whatever it takes, passion required
+- NO AI slop patterns (vague platitudes, repetitive phrasing)
+
+### Transparency (25 pts target)
 ${compensationReq}
-7. Distinguishes must-have vs nice-to-have requirements
-8. Includes "60-70%" encouragement statement
-${benefitsReq}
-10. Mentions career growth opportunities
-11. Provides clear application process and timeline
+- **Encouragement**: MUST include "If you meet 60-70% of these qualifications, we encourage you to apply"
 
-Output ONLY the rewritten Job Description in markdown format. No commentary.`;
+## STRUCTURE REQUIREMENTS
+- Clear sections: About the Role, Key Responsibilities, Required Qualifications, Preferred Qualifications, What We Offer, To Apply
+- Distinguishes must-have vs nice-to-have requirements
+- Mentions career growth opportunities
+
+Output ONLY the final job description. Begin with # [Job Title].`;
 }
 
 /**
