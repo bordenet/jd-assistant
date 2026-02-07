@@ -10,7 +10,7 @@ import { escapeHtml, showToast, copyToClipboard, copyToClipboardAsync, showPromp
 import { navigateTo } from './router.js';
 import { preloadPromptTemplates } from './prompts.js';
 import { computeWordDiff, renderDiffHtml, getDiffStats } from './diff-view.js';
-import { validateJD, getScoreColor, getScoreLabel } from './jd-validator.js';
+import { validateDocument, getScoreColor, getScoreLabel } from './jd-validator.js';
 
 /**
  * Extract title from markdown content (looks for # Title at the beginning)
@@ -191,7 +191,7 @@ function renderPhaseContent(project, phaseNumber) {
   let completionBanner = '';
   if (phaseNumber === 3 && phaseData.completed) {
     // Run validation on final JD (pass postingType to skip comp check for internal)
-    const validationResult = validateJD(phaseData.response || '', project.postingType || 'external');
+    const validationResult = validateDocument(phaseData.response || '', project.postingType || 'external');
     const scoreColor = getScoreColor(validationResult.totalScore);
     const scoreLabel = getScoreLabel(validationResult.totalScore);
 

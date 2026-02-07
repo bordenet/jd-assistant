@@ -1,9 +1,14 @@
 /**
  * JD Validator - Minimal validation for Phase 4 completion
- * 
+ *
  * This is a lightweight version of the validator for use in the assistant.
  * For full validation, use the standalone validator app.
  */
+
+import { getSlopPenalty, calculateSlopScore } from './slop-detection.js';
+
+// Re-export for direct access
+export { calculateSlopScore };
 
 // Masculine-coded words that discourage women from applying
 const MASCULINE_CODED = [
@@ -93,7 +98,7 @@ function validateJDContent(text) {
  * @param {string} [postingType='external'] - Whether this is an 'internal' or 'external' posting
  * @returns {Object} Validation result with score, grade, issues, and warnings
  */
-export function validateJD(text, postingType = 'external') {
+export function validateDocument(text, postingType = 'external') {
   let score = 100;
   const issues = [];
   const isInternal = postingType === 'internal';
@@ -102,51 +107,78 @@ export function validateJD(text, postingType = 'external') {
 
   // Word count
   const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+  let lengthDeduction = 0;
   if (wordCount < 400) {
-    score -= Math.min(15, Math.floor((400 - wordCount) / 20));
-    issues.push(`Short (${wordCount} words)`);
+    lengthDeduction = Math.min(15, Math.floor((400 - wordCount) / 20));
+    score -= lengthDeduction;
+    if (lengthDeduction > 0) {
+      issues.push(`Short (${wordCount} words)`);
+    }
   } else if (wordCount > 700) {
-    score -= Math.min(10, Math.floor((wordCount - 700) / 50));
-    issues.push(`Long (${wordCount} words)`);
+    lengthDeduction = Math.min(10, Math.floor((wordCount - 700) / 50));
+    score -= lengthDeduction;
+    if (lengthDeduction > 0) {
+      issues.push(`Long (${wordCount} words)`);
+    }
   }
 
-  // Masculine-coded words
+  // Masculine-coded words (-5 pts each, max -25)
   const masculineCount = jdValidation.warnings.filter(w => w.type === 'masculine-coded').length;
+  const masculineDeduction = Math.min(25, masculineCount * 5);
   if (masculineCount > 0) {
-    score -= Math.min(25, masculineCount * 5);
+    score -= masculineDeduction;
     issues.push(`${masculineCount} masculine-coded word(s)`);
   }
 
-  // Extrovert-bias
+  // Extrovert-bias (-5 pts each, max -20)
   const extrovertCount = jdValidation.warnings.filter(w => w.type === 'extrovert-bias').length;
+  const extrovertDeduction = Math.min(20, extrovertCount * 5);
   if (extrovertCount > 0) {
-    score -= Math.min(20, extrovertCount * 5);
+    score -= extrovertDeduction;
     issues.push(`${extrovertCount} extrovert-bias phrase(s)`);
   }
 
-  // Red flags
+  // Red flags (-5 pts each, max -25)
   const redFlagCount = jdValidation.warnings.filter(w => w.type === 'red-flag').length;
+  const redFlagDeduction = Math.min(25, redFlagCount * 5);
   if (redFlagCount > 0) {
-    score -= Math.min(25, redFlagCount * 5);
+    score -= redFlagDeduction;
     issues.push(`${redFlagCount} red flag phrase(s)`);
   }
 
-  // Compensation - skip for internal postings
+  // Compensation - skip for internal postings (-10 pts if missing)
+  let compensationDeduction = 0;
   if (!isInternal) {
     const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
                             /salary.*\$[\d,]+/i.test(text) ||
                             /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
     if (!hasCompensation) {
-      score -= 10;
+      compensationDeduction = 10;
+      score -= compensationDeduction;
       issues.push('No compensation range');
     }
   }
 
-  // Encouragement statement
+  // Encouragement statement (-5 pts if missing)
   const hasEncouragement = /60.*70.*%|meet.*most|don't.*meet.*all|encouraged.*apply/i.test(text);
+  let encouragementDeduction = 0;
   if (!hasEncouragement) {
-    score -= 5;
+    encouragementDeduction = 5;
+    score -= encouragementDeduction;
     issues.push('Missing encouragement statement');
+  }
+
+  // AI slop detection
+  const slopPenalty = getSlopPenalty(text);
+  let slopDeduction = 0;
+  const slopIssues = [];
+
+  if (slopPenalty.penalty > 0) {
+    slopDeduction = Math.min(5, Math.floor(slopPenalty.penalty * 0.6));
+    if (slopPenalty.issues.length > 0) {
+      slopIssues.push(...slopPenalty.issues.slice(0, 2));
+    }
+    score -= slopDeduction;
   }
 
   score = Math.max(0, score);
@@ -154,15 +186,30 @@ export function validateJD(text, postingType = 'external') {
   const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
   const colorClass = score >= 80 ? 'text-green-500' : score >= 60 ? 'text-yellow-500' : 'text-red-500';
 
-  // Add category breakdowns for inline quality score display
+  // Category breakdowns for UI display
+  // IMPORTANT: Categories must sum to totalScore for UX clarity
+  // Calculate raw category scores first, then adjust to ensure sum matches total
+  const rawLength = 25 - lengthDeduction;
+  const rawInclusivity = Math.max(0, 25 - masculineDeduction - extrovertDeduction);
+  const rawCulture = Math.max(0, 25 - redFlagDeduction - slopDeduction);
+  const rawTransparency = 25 - compensationDeduction - encouragementDeduction;
+
+  // Calculate the difference between raw sum and actual total
+  const rawSum = rawLength + rawInclusivity + rawCulture + rawTransparency;
+  const adjustment = rawSum - score;
+
+  // Apply adjustment to the last category (transparency) to ensure sum matches
+  // This handles cases where deductions exceed category caps
+  const adjustedTransparency = Math.max(0, rawTransparency - adjustment);
+
   const categories = {
     length: {
-      score: wordCount >= 400 && wordCount <= 700 ? 25 : Math.max(0, 25 - Math.min(15, Math.abs(wordCount - 550) / 20)),
+      score: rawLength,
       maxScore: 25,
-      issues: wordCount < 400 ? [`Short (${wordCount} words)`] : wordCount > 700 ? [`Long (${wordCount} words)`] : []
+      issues: lengthDeduction > 0 ? (wordCount < 400 ? [`Short (${wordCount} words)`] : [`Long (${wordCount} words)`]) : []
     },
     inclusivity: {
-      score: Math.max(0, 25 - masculineCount * 5 - extrovertCount * 5),
+      score: rawInclusivity,
       maxScore: 25,
       issues: [
         ...jdValidation.warnings.filter(w => w.type === 'masculine-coded').map(w => `Masculine-coded: "${w.word}"`),
@@ -170,16 +217,19 @@ export function validateJD(text, postingType = 'external') {
       ]
     },
     culture: {
-      score: Math.max(0, 25 - redFlagCount * 5),
-      maxScore: 25,
-      issues: jdValidation.warnings.filter(w => w.type === 'red-flag').map(w => `Red flag: "${w.phrase}"`)
-    },
-    transparency: {
-      score: (isInternal || /\$[\d,]+/.test(text) ? 15 : 0) + (hasEncouragement ? 10 : 0),
+      score: rawCulture,
       maxScore: 25,
       issues: [
-        ...(!isInternal && !/\$[\d,]+/.test(text) ? ['No compensation range'] : []),
-        ...(!hasEncouragement ? ['Missing encouragement statement'] : [])
+        ...jdValidation.warnings.filter(w => w.type === 'red-flag').map(w => `Red flag: "${w.phrase}"`),
+        ...(slopDeduction > 0 ? [`AI patterns detected (-${slopDeduction})`] : [])
+      ]
+    },
+    transparency: {
+      score: adjustedTransparency,
+      maxScore: 25,
+      issues: [
+        ...(compensationDeduction > 0 ? ['No compensation range'] : []),
+        ...(encouragementDeduction > 0 ? ['Missing encouragement statement'] : [])
       ]
     }
   };
@@ -195,7 +245,12 @@ export function validateJD(text, postingType = 'external') {
     length: categories.length,
     inclusivity: categories.inclusivity,
     culture: categories.culture,
-    transparency: categories.transparency
+    transparency: categories.transparency,
+    slopDetection: {
+      ...slopPenalty,
+      deduction: slopDeduction,
+      issues: slopIssues
+    }
   };
 }
 

@@ -10,19 +10,21 @@ import {
   generatePhase3Prompt,
   getPhaseMetadata,
   preloadPromptTemplates
-} from '../js/prompts.js';
+} from '../../shared/js/prompts.js';
 
 // Mock fetch for loading prompt templates
+// Handles both shared/prompts/ (root) and ../shared/prompts/ (assistant/) paths
 global.fetch = jest.fn(async (url) => {
   const templates = {
-    'prompts/phase1.md': 'Phase 1: Job Description for {{JOB_TITLE}} at {{COMPANY_NAME}} ({{ROLE_LEVEL}}) in {{LOCATION}}. Responsibilities: {{RESPONSIBILITIES}}. Required: {{REQUIRED_QUALIFICATIONS}}. Preferred: {{PREFERRED_QUALIFICATIONS}}. Compensation: {{COMPENSATION_RANGE}}. Benefits: {{BENEFITS}}. Tech Stack: {{TECH_STACK}}. Team: {{TEAM_SIZE}}. AI: {{AI_SPECIFICS}}. Career Ladder: {{CAREER_LADDER}}. Preamble: {{COMPANY_PREAMBLE}}. Legal: {{COMPANY_LEGAL_TEXT}}.',
-    'prompts/phase2.md': 'Phase 2: Review for {{JOB_TITLE}} ({{ROLE_LEVEL}}) at {{COMPANY_NAME}}. Previous output: {{PHASE1_OUTPUT}}',
-    'prompts/phase3.md': 'Phase 3: Final synthesis for {{JOB_TITLE}} at {{COMPANY_NAME}}. Phase 1: {{PHASE1_OUTPUT}}. Phase 2: {{PHASE2_OUTPUT}}'
+    'phase1.md': 'Phase 1: Job Description for {{JOB_TITLE}} at {{COMPANY_NAME}} ({{ROLE_LEVEL}}) in {{LOCATION}}. Responsibilities: {{RESPONSIBILITIES}}. Required: {{REQUIRED_QUALIFICATIONS}}. Preferred: {{PREFERRED_QUALIFICATIONS}}. Compensation: {{COMPENSATION_RANGE}}. Benefits: {{BENEFITS}}. Tech Stack: {{TECH_STACK}}. Team: {{TEAM_SIZE}}. AI: {{AI_SPECIFICS}}. Career Ladder: {{CAREER_LADDER}}. Preamble: {{COMPANY_PREAMBLE}}. Legal: {{COMPANY_LEGAL_TEXT}}.',
+    'phase2.md': 'Phase 2: Review for {{JOB_TITLE}} ({{ROLE_LEVEL}}) at {{COMPANY_NAME}}. Previous output: {{PHASE1_OUTPUT}}',
+    'phase3.md': 'Phase 3: Final synthesis for {{JOB_TITLE}} at {{COMPANY_NAME}}. Phase 1: {{PHASE1_OUTPUT}}. Phase 2: {{PHASE2_OUTPUT}}'
   };
-
+  // Extract filename from path (handles both old and new paths)
+  const filename = url.split('/').pop();
   return {
     ok: true,
-    text: async () => templates[url] || 'Default template'
+    text: async () => templates[filename] || 'Default template'
   };
 });
 
@@ -80,9 +82,13 @@ describe('preloadPromptTemplates', () => {
   test('should preload all phase templates', async () => {
     await preloadPromptTemplates();
 
-    expect(global.fetch).toHaveBeenCalledWith('prompts/phase1.md');
-    expect(global.fetch).toHaveBeenCalledWith('prompts/phase2.md');
-    expect(global.fetch).toHaveBeenCalledWith('prompts/phase3.md');
+    // Verify fetch was called 3 times (once per phase)
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+    // Verify paths end with phase filenames (works with shared/ pattern)
+    const calls = global.fetch.mock.calls.map(c => c[0]);
+    expect(calls.some(url => url.endsWith('phase1.md'))).toBe(true);
+    expect(calls.some(url => url.endsWith('phase2.md'))).toBe(true);
+    expect(calls.some(url => url.endsWith('phase3.md'))).toBe(true);
   });
 });
 
