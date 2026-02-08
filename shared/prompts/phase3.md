@@ -117,36 +117,20 @@ Run final checklist:
 
 ## Output Format
 
-```markdown
-# {{JOB_TITLE}}
+Structure the final JD with these sections:
 
-## About the Role
-[2-4 sentences describing impact and context]
+| Section | Content |
+|---------|---------|
+| # {{JOB_TITLE}} | Job title as H1 header |
+| ## About the Role | 2-4 sentences on impact and context |
+| ## Key Responsibilities | 5-8 concrete bullet points with outcomes |
+| ## Required Qualifications | 3-6 specific, non-gatekeeping items |
+| ## Preferred Qualifications | 4-8 nice-to-have items |
+| ## What We Offer | Compensation, Benefits, Growth, Team info |
+| ## To Apply | Clear CTA with timeline + encouragement statement |
+| [Company info] | Preserve preamble and legal text exactly as provided |
 
-## Key Responsibilities
-[5-8 concrete bullet points with outcomes]
-
-## Required Qualifications
-[3-6 specific, non-gatekeeping items]
-
-## Preferred Qualifications
-[4-8 nice-to-have items]
-
-## What We Offer
-- **Compensation:** [Range]
-- **Benefits:** [Key benefits]
-- **Growth:** [Career path]
-- **Team:** [Team structure]
-
-## To Apply
-[Clear CTA with timeline]
-
-If you meet 60-70% of these qualifications, we encourage you to apply.
-
----
-
-[Company preamble and legal text preserved exactly]
-```
+**CRITICAL:** Include encouragement statement: "If you meet 60-70% of these qualifications, we encourage you to apply."
 
 ---
 

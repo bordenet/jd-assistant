@@ -123,55 +123,18 @@ Flag ANY of these: fast-paced, like a family, wear many hats, always-on, hustle,
 
 ## Output Format
 
-```markdown
-## 🚨 Critical Issues (Must Fix)
+Structure your review with these sections:
 
-1. **Masculine-Coded Words**
-   - Line X: "aggressive" → Replace with: "proactive"
-   - Line Y: "rockstar" → Replace with: "senior engineer"
+| Section | Content |
+|---------|---------|
+| ## 🚨 Critical Issues (Must Fix) | Numbered categories with line-specific fixes |
+| ## ⚠️ Warnings (Should Address) | Recommendations for improvement |
+| ## ✅ Strengths | Bullet list of what's working well |
+| ## 📝 Complete Revised Job Description | Full revised JD with all fixes applied |
 
-2. **Neurodiversity-Excluding Language**
-   - Line Z: "fast-paced environment" → Replace with: "structured workflow with clear priorities"
+**Issue format:** `Line X: "problematic term" → Replace with: "inclusive alternative"`
 
-3. **Red Flag Phrases**
-   - Line A: "like a family" → Replace with: "supportive team culture"
-
-## ⚠️ Warnings (Should Address)
-
-1. **Requirements Reasonableness**
-   - You have 8 required qualifications; recommend reducing to 4-5
-
-2. **Compensation Transparency**
-   - Range is $150k-$250k (67% spread); recommend narrowing to 30-50%
-
-## ✅ Strengths
-
-- Clear responsibilities with concrete outcomes
-- Good team structure description
-- Includes benefits information
-
-## 📝 Complete Revised Job Description
-
-# [Job Title]
-
-## About the Role
-[Full revised content...]
-
-## Key Responsibilities
-[Full revised content...]
-
-## Required Qualifications
-[Full revised content...]
-
-## Preferred Qualifications
-[Full revised content...]
-
-## What We Offer
-[Full revised content...]
-
-## To Apply
-[Full revised content...]
-```
+**Example categories:** Masculine-Coded Words, Neurodiversity-Excluding Language, Red Flag Phrases, Requirements Reasonableness, Compensation Transparency
 
 **⚠️ The "Complete Revised Job Description" section is REQUIRED. Do not omit it.**
 
