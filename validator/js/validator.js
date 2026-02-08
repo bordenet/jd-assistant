@@ -79,11 +79,15 @@ export function validateDocument(text, postingType = 'external') {
   }
 
   // 5. Check for compensation range (-10 pts if missing) - skip for internal postings
+  // Adversarial fix: Added non-$ currency patterns (USD, EUR, GBP) for international JDs
   if (!isInternal) {
     const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
                             /salary.*\$[\d,]+/i.test(text) ||
                             /compensation.*\$[\d,]+/i.test(text) ||
-                            /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text);
+                            /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text) ||
+                            // Non-$ formats: "150,000 - 200,000 USD" or "€80,000 - €120,000"
+                            /[\d,]+\s*[-–—]\s*[\d,]+\s*(USD|EUR|GBP|CAD|AUD)/i.test(text) ||
+                            /[€£][\d,]+\s*[-–—]\s*[€£][\d,]+/i.test(text);
     if (hasCompensation) {
       feedback.push('✅ Compensation range included');
     } else {
@@ -96,8 +100,9 @@ export function validateDocument(text, postingType = 'external') {
   }
 
   // 6. Check for encouragement statement (-5 pts if missing)
-  // Improved regex from adversarial review - handles hyphen, en-dash, "to", and common variations
-  const hasEncouragement = /60[-–]70%|60\s*[-–]\s*70\s*%|60\s+to\s+70\s*%|meet.*most.*requirements|we\s+encourage.*apply|don't.*meet.*all/i.test(text);
+  // Adversarial fix: Narrowed "don't meet all" to require "qualifications" or "requirements" context
+  // Prevents gaming with unrelated text like "We don't meet all our goals"
+  const hasEncouragement = /60[-–]70%|60\s*[-–]\s*70\s*%|60\s+to\s+70\s*%|meet.*most.*(requirements|qualifications)|we\s+encourage.*apply|don't.*meet.*all.*(qualifications|requirements)/i.test(text);
   if (hasEncouragement) {
     feedback.push('✅ Includes encouragement statement');
   } else {
@@ -326,8 +331,10 @@ export function validateJDContent(text) {
   });
 
   // Check for extrovert-bias phrases
+  // Adversarial fix: Handle hyphen/space variations (e.g., "high-energy" vs "high energy")
   EXTROVERT_BIAS.forEach(phrase => {
-    const regex = new RegExp(`\\b${phrase.replace(/\s+/g, '\\s+')}\\b`, 'gi');
+    const flexiblePattern = phrase.replace(/[-\s]+/g, '[-\\s]+');
+    const regex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
     if (regex.test(cleanText)) {
       // Skip if this phrase appears in mandated sections
       if (!isInMandatedSection(phrase, mandatedSections)) {
@@ -341,8 +348,11 @@ export function validateJDContent(text) {
   });
 
   // Check for red flag phrases
+  // Adversarial fix: Handle hyphen/space variations (e.g., "fast-paced" vs "fast paced")
   RED_FLAGS.forEach(phrase => {
-    const regex = new RegExp(`\\b${phrase.replace(/\s+/g, '\\s+')}\\b`, 'gi');
+    // Replace both hyphens and spaces with flexible pattern that matches either
+    const flexiblePattern = phrase.replace(/[-\s]+/g, '[-\\s]+');
+    const regex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
     if (regex.test(cleanText)) {
       // Skip if this phrase appears in mandated sections
       if (!isInMandatedSection(phrase, mandatedSections)) {
