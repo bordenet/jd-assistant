@@ -40,53 +40,18 @@ Write inclusive job descriptions for software engineering positions. Three phase
 
 ## Scoring Methodology
 
-The validator scores job descriptions on a 100-point scale using a **penalty-based system**. Unlike other Genesis validators that reward positive elements, JD Assistant starts at 100 and deducts for problems. This reflects the research finding that inclusive JDs are defined by what they *don't* contain.
+The validator scores job descriptions on a **100-point scale** using a **penalty-based system**. Unlike other genesis validators that reward positive elements, JD Assistant starts at 100 and deducts for problems:
 
-### Scoring Taxonomy
+| Category | Max Penalty |
+|----------|-------------|
+| Word Count | -15 |
+| Masculine-Coded Words | -25 |
+| Extrovert-Bias Phrases | -20 |
+| Red Flag Phrases | -25 |
+| Compensation Range | -10 |
+| Encouragement Statement | -5 |
 
-| Category | Weight | Rationale |
-|----------|--------|-----------|
-| **Length** | 25 pts | Enforces optimal 400-700 word range for applicant completion rates |
-| **Inclusivity** | 25 pts | Penalizes masculine-coded words and extrovert-bias phrases |
-| **Culture** | 25 pts | Flags red-flag phrases signaling toxic work environments |
-| **Transparency** | 25 pts | Validates compensation disclosure and encouragement statements |
-
-### Why These Weights?
-
-**Length (25 pts)** is based on research showing application rates drop sharply for JDs outside the 400-700 word sweet spot. The validator applies graduated penalties:
-- **Too short** (<400 words): -1 pt per 20 words below 400 (max -15)
-- **Too long** (>700 words): -1 pt per 50 words above 700 (max -10)
-
-**Inclusivity (25 pts)** addresses the primary cause of applicant pool homogeneity. Research by Gaucher et al. (2011) found masculine-coded language reduces female applicants by up to 50%. The validator penalizes:
-- **Masculine-coded words** (-5 pts each, max -25): aggressive, ambitious, assertive, competitive, confident, decisive, determined, dominant, driven, fearless, independent, ninja, rockstar, guru, self-reliant, self-sufficient, superior
-- **Extrovert-bias phrases** (-5 pts each, max -20): outgoing, high-energy, energetic, people person, gregarious, strong communicator, excellent verbal, team player
-
-**Culture (25 pts)** flags phrases that signal dysfunction to experienced candidates. These are "tells" that correlate with burnout, unclear boundaries, and toxic management:
-- **Red flag phrases** (-5 pts each, max -25): fast-paced, like a family, wear many hats, always-on, hustle, grind, unlimited pto, work hard play hard, hit the ground running, self-starter, thick skin, no ego, drama-free, whatever it takes, passion required
-
-**Transparency (25 pts)** enforces disclosure practices that attract diverse applicants:
-- **Missing encouragement** (-5 pts): Absence of "60-70% of qualifications" encouragement statement
-- **Missing compensation** (-10 pts): No salary range disclosed (for external postings)
-
-### Adversarial Robustness
-
-The penalty-based system resists gaming because there's no positive scoring to inflate:
-
-| Gaming Attempt | Why It Fails |
-|----------------|--------------|
-| Adding inclusive buzzwords | No positive points for inclusive language—only penalties avoided |
-| Hiding red flags in boilerplate | EEO/legal sections are validated separately with relaxed rules |
-| Padding to hit word count | Upper word limit penalizes padding equally |
-| Using synonyms for flagged terms | Pattern matching includes common variants and compound forms |
-| Removing hyphens ("fast paced") | Flexible regex matches both "fast-paced" and "fast paced" |
-| Vague encouragement text | "don't meet all" requires "qualifications" or "requirements" context |
-| Non-$ salary formats | Accepts USD/EUR/GBP/CAD/AUD and €/£ symbols |
-
-### Calibration Notes
-
-The **penalty cap** per category prevents catastrophic scoring. A JD with 10 masculine-coded words still loses only 25 pts in Inclusivity, not 50. This calibration reflects that a single category failure shouldn't doom an otherwise acceptable JD.
-
-The **EEO/legal relaxation** addresses organizational requirements. Companies often have mandated equal opportunity language that includes phrases like "we are committed to..." which would otherwise trigger AI slop detection. The validator identifies these sections and applies reduced scrutiny.
+This reflects research showing inclusive JDs are defined by what they *don't* contain. For complete methodology details including detection patterns, adversarial robustness, and calibration notes, see **[docs/Scoring_Methods.md](./docs/Scoring_Methods.md)**.
 
 ---
 
