@@ -96,7 +96,8 @@ export function validateDocument(text, postingType = 'external') {
   }
 
   // 6. Check for encouragement statement (-5 pts if missing)
-  const hasEncouragement = /60.*70.*%|meet.*most|don't.*meet.*all|encouraged.*apply/i.test(text);
+  // Improved regex from adversarial review - handles hyphen, en-dash, "to", and common variations
+  const hasEncouragement = /60[-–]70%|60\s*[-–]\s*70\s*%|60\s+to\s+70\s*%|meet.*most.*requirements|we\s+encourage.*apply|don't.*meet.*all/i.test(text);
   if (hasEncouragement) {
     feedback.push('✅ Includes encouragement statement');
   } else {

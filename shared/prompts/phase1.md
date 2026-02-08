@@ -91,48 +91,18 @@ fast-paced, like a family, wear many hats, always-on, hustle, grind, unlimited p
 
 Create a well-structured job description with these sections:
 
-```markdown
-# {{JOB_TITLE}}
+| Section | Content |
+|---------|---------|
+| # {{JOB_TITLE}} | Job title as H1 header |
+| ## About the Role | 2-4 sentences on role impact and success criteria |
+| ## Key Responsibilities | 5-8 bullet points with action verbs and concrete outcomes |
+| ## Required Qualifications | 3-6 must-have items with specific skills/experience |
+| ## Preferred Qualifications | 4-8 nice-to-have items |
+| ## What We Offer | Compensation range, benefits, growth, team info |
+| ## To Apply | How to apply, timeline, and encouragement statement |
+| ## [Optional] About Company | Brief company context if relevant |
 
-## About the Role
-2-4 sentences describing the role's impact and context. Be specific about what success looks like.
-
-## Key Responsibilities
-5-8 bullet points with action verbs. Use concrete outcomes, not vague duties.
-- Own [specific system/feature] and ship [X features/quarter]
-- Mentor [X junior engineers] on [specific skill]
-- Collaborate with [specific teams] to [concrete outcome]
-
-## Required Qualifications
-3-6 items. Focus on skills, not years. Drop "years of experience" unless critical.
-- [X years] experience with [specific technology]
-- Proficiency in [language/framework]
-- Experience with [specific domain/pattern]
-
-## Preferred Qualifications
-4-8 items. These are "nice to have", not required.
-- Open source contributions
-- Experience with [adjacent technology]
-- Familiarity with [domain]
-
-## What We Offer
-- **Compensation:** {{COMPENSATION_RANGE}} base salary
-- **Benefits:** {{BENEFITS}}
-- **Growth:** {{CAREER_LADDER}}
-- **Team:** {{TEAM_SIZE}}
-
-## Other
-If there is additional context that doesn't fit cleanly into the sections above (e.g., role purpose, team mission, unique aspects of the position, working environment details), find a logical place to include an "Other" section. This section should capture any important information that would help candidates understand the role but doesn't belong in the standard sections.
-
-## To Apply
-Clear call-to-action. Include:
-- How to apply (link, email)
-- Timeline (when you'll hear back)
-- **Important:** "If you meet 60-70% of these qualifications, we encourage you to apply."
-
-## [Optional] About {{COMPANY_NAME}}
-Brief company context if relevant.
-```
+**CRITICAL:** The "To Apply" section MUST include: "If you meet 60-70% of these qualifications, we encourage you to apply."
 
 ### ⚠️ CRITICAL: De-Duplication Rule
 
