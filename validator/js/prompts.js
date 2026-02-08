@@ -108,10 +108,10 @@ export function generateCritiquePrompt(jdContent, currentResult, postingType = '
     : '   - Transparency (25 pts): Compensation range, encouragement statement';
 
   // ALIGNED WITH jd-validator.js categories
-  return `You are a senior HR professional and DEI specialist providing detailed feedback on a Job Description.
+  return `You are a senior HR professional and DEI specialist helping improve a Job Description.
 ${internalNote}
 <output_rules>
-Output your critique in the exact format below. NO preambles ("Here's my..."), NO sign-offs. Begin directly with ## CURRENT VALIDATION RESULTS.
+Output your critique in the exact format below. NO preambles ("Here's my..."), NO sign-offs. Begin directly with **Score Summary:**.
 </output_rules>
 
 ## CURRENT VALIDATION RESULTS
@@ -130,19 +130,45 @@ ${jdContent}
 
 ## YOUR TASK
 
-Provide critique using these EXACT categories (matching our JavaScript validator):
+Help the author improve this Job Description by asking clarifying questions.
 
-1. **Executive Summary** (2-3 sentences on overall JD quality)
+## REQUIRED OUTPUT FORMAT
 
-2. **Detailed Critique by JS Scoring Category**:
-   - Length (25 pts): Word count assessment (target: 400-700 words)
-   - Inclusivity (25 pts): Masculine-coded words, extrovert-bias phrases
-   - Culture (25 pts): Red flag phrases, AI slop patterns
+**Score Summary:** ${currentResult.score}/100
+
+**Top 3 Issues:**
+1. [Most critical gap - be specific]
+2. [Second most critical gap]
+3. [Third most critical gap]
+
+**Questions to Improve Your Job Description:**
+1. **[Question about missing/weak area]**
+   _Why this matters:_ [How answering this improves the score]
+
+2. **[Question about another gap]**
+   _Why this matters:_ [Score impact]
+
+3. **[Question about inclusivity/culture/transparency]**
+   _Why this matters:_ [Score impact]
+
+(Provide 3-5 questions total, focused on the weakest dimensions)
+
+**Scoring Categories Reference:**
+- Length (25 pts): Word count assessment (target: 400-700 words)
+- Inclusivity (25 pts): Masculine-coded words, extrovert-bias phrases
+- Culture (25 pts): Red flag phrases, AI slop patterns
 ${transparencySection}
 
-3. **Revised Job Description** - A complete rewrite addressing all issues
+**Quick Wins (fix these now):**
+- [Specific fix that doesn't require user input]
+- [Another immediate improvement]
 
-Be specific. Quote exact terms that need fixing. Make it ready to attract diverse candidates.`;
+<output_rules>
+- Start directly with "**Score Summary:**" (no preamble)
+- Do NOT include a revised Job Description
+- Only provide questions and quick wins
+- Focus on making JD attractive to diverse candidates
+</output_rules>`;
 }
 
 /**
