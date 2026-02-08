@@ -182,7 +182,10 @@ const MASCULINE_CODED = [
   'aggressive', 'ambitious', 'assertive', 'competitive', 'confident',
   'decisive', 'determined', 'dominant', 'driven', 'fearless',
   'independent', 'ninja', 'rockstar', 'guru', 'self-reliant',
-  'self-sufficient', 'superior'
+  'self-sufficient', 'superior',
+  // Added from phase1.md alignment review (8 missing words)
+  'leader', 'go-getter', 'hard-charging', 'strong', 'tough',
+  'warrior', 'superhero', 'superstar', 'boss'
 ];
 
 /**
@@ -227,6 +230,16 @@ const SUGGESTIONS = {
   'self-reliant': 'Use "capable" or "resourceful" instead',
   'self-sufficient': 'Use "capable" or "resourceful" instead',
   'superior': 'Use "excellent" or "skilled" instead',
+  // Added from phase1.md alignment review (8 missing words)
+  'leader': 'Use "guide" or "mentor" instead',
+  'go-getter': 'Use "motivated" or "proactive" instead',
+  'hard-charging': 'Use "dedicated" or "committed" instead',
+  'strong': 'Use "skilled" or "experienced" instead',
+  'tough': 'Use "resilient" or "adaptable" instead',
+  'warrior': 'Use "advocate" or "champion" instead',
+  'superhero': 'Use "expert" or "specialist" instead',
+  'superstar': 'Use "high performer" or "expert" instead',
+  'boss': 'Use "manager" or "lead" instead',
 
   // Extrovert-bias
   'outgoing': 'Use "collaborative" or remove if not essential',
