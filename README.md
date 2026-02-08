@@ -78,6 +78,9 @@ The penalty-based system resists gaming because there's no positive scoring to i
 | Hiding red flags in boilerplate | EEO/legal sections are validated separately with relaxed rules |
 | Padding to hit word count | Upper word limit penalizes padding equally |
 | Using synonyms for flagged terms | Pattern matching includes common variants and compound forms |
+| Removing hyphens ("fast paced") | Flexible regex matches both "fast-paced" and "fast paced" |
+| Vague encouragement text | "don't meet all" requires "qualifications" or "requirements" context |
+| Non-$ salary formats | Accepts USD/EUR/GBP/CAD/AUD and €/£ symbols |
 
 ### Calibration Notes
 
