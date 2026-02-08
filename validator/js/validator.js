@@ -175,6 +175,17 @@ export function getScoreColor(score) {
 }
 
 /**
+ * Get label based on score for UI display
+ */
+export function getScoreLabel(score) {
+  if (score >= 80) return 'Excellent';
+  if (score >= 70) return 'Ready';
+  if (score >= 50) return 'Needs Work';
+  if (score >= 30) return 'Draft';
+  return 'Incomplete';
+}
+
+/**
  * Masculine-coded words that discourage women from applying
  * Based on Gaucher et al. (2011) JPSP and Textio research
  */

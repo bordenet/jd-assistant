@@ -126,8 +126,54 @@ describe('Smoke Test - App Initialization', () => {
     });
   });
 
-  // Note: jd-assistant uses jd-validator.js instead of validator-inline.js
-  // The validator-inline.js tests are not applicable to this project
+  describe('Export Consistency - validator.js exports match project-view.js imports', () => {
+    test('validator.js exports validateDocument', async () => {
+      const validator = await import('../../validator/js/validator.js');
+      expect(typeof validator.validateDocument).toBe('function');
+    });
+
+    test('validator.js exports getScoreColor', async () => {
+      const validator = await import('../../validator/js/validator.js');
+      expect(typeof validator.getScoreColor).toBe('function');
+    });
+
+    test('validator.js exports getScoreLabel', async () => {
+      const validator = await import('../../validator/js/validator.js');
+      expect(typeof validator.getScoreLabel).toBe('function');
+    });
+  });
+
+  describe('Single Source of Truth - No Duplicate Validator', () => {
+    test('validator-inline.js should NOT exist in shared/js', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), 'shared/js/validator-inline.js');
+      expect(fs.existsSync(filePath)).toBe(false);
+    });
+
+    test('jd-validator.js should NOT exist in shared/js', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const filePath = path.join(process.cwd(), 'shared/js/jd-validator.js');
+      expect(fs.existsSync(filePath)).toBe(false);
+    });
+
+    test('all validator imports should point to validator/js/validator.js', async () => {
+      const fs = await import('fs');
+      const path = await import('path');
+      const sharedDir = path.join(process.cwd(), 'shared/js');
+      const files = fs.readdirSync(sharedDir).filter(f => f.endsWith('.js'));
+
+      for (const file of files) {
+        const content = fs.readFileSync(path.join(sharedDir, file), 'utf-8');
+        const hasOldImport = content.includes("from './validator-inline.js'") ||
+                            content.includes('from "./validator-inline.js"') ||
+                            content.includes("from './jd-validator.js'") ||
+                            content.includes('from "./jd-validator.js"');
+        expect(hasOldImport).toBe(false);
+      }
+    });
+  });
 
   describe('Export Consistency - diff-view.js exports match project-view.js imports', () => {
     test('diff-view.js exports computeWordDiff', async () => {
