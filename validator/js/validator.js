@@ -10,6 +10,250 @@ import { calculateSlopScore, getSlopPenalty } from './slop-detection.js';
 // Re-export for direct access
 export { calculateSlopScore };
 
+// ============================================================================
+// Individual Scoring Functions (exported for testing)
+// Each returns { penalty, maxPenalty, feedback, deduction? }
+// ============================================================================
+
+/**
+ * Score word count - ideal range is 400-700 words
+ * @param {string} text - The JD text to validate
+ * @returns {Object} { penalty, maxPenalty, wordCount, feedback, deduction }
+ */
+export function scoreWordCount(text) {
+  const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+
+  if (wordCount >= 400 && wordCount <= 700) {
+    return {
+      penalty: 0,
+      maxPenalty: 15,
+      wordCount,
+      feedback: `✅ Good length: ${wordCount} words (ideal: 400-700)`,
+      deduction: null
+    };
+  } else if (wordCount < 400) {
+    const penalty = Math.min(15, Math.floor((400 - wordCount) / 20));
+    return {
+      penalty,
+      maxPenalty: 15,
+      wordCount,
+      feedback: `⚠️ Short: ${wordCount} words (aim for 400-700)`,
+      deduction: `-${penalty} pts: Too short (${wordCount} words, aim for 400+)`
+    };
+  } else {
+    const penalty = Math.min(10, Math.floor((wordCount - 700) / 50));
+    return {
+      penalty,
+      maxPenalty: 10,
+      wordCount,
+      feedback: `⚠️ Long: ${wordCount} words (aim for ≤700)`,
+      deduction: `-${penalty} pts: Too long (${wordCount} words, aim for ≤700)`
+    };
+  }
+}
+
+/**
+ * Score masculine-coded words - penalize gender-exclusive language
+ * @param {Array} warnings - Array of warning objects from validateJDContent
+ * @returns {Object} { penalty, maxPenalty, count, feedback, deduction }
+ */
+export function scoreMasculineCoded(warnings) {
+  const count = warnings.filter(w => w.type === 'masculine-coded').length;
+
+  if (count > 0) {
+    const penalty = Math.min(25, count * 5);
+    return {
+      penalty,
+      maxPenalty: 25,
+      count,
+      feedback: `🚨 ${count} masculine-coded word(s) found`,
+      deduction: `-${penalty} pts: ${count} masculine-coded word(s)`
+    };
+  }
+
+  return {
+    penalty: 0,
+    maxPenalty: 25,
+    count: 0,
+    feedback: '✅ No masculine-coded words',
+    deduction: null
+  };
+}
+
+/**
+ * Score extrovert-bias phrases - penalize neurodiversity-exclusive language
+ * @param {Array} warnings - Array of warning objects from validateJDContent
+ * @returns {Object} { penalty, maxPenalty, count, feedback, deduction }
+ */
+export function scoreExtrovertBias(warnings) {
+  const count = warnings.filter(w => w.type === 'extrovert-bias').length;
+
+  if (count > 0) {
+    const penalty = Math.min(20, count * 5);
+    return {
+      penalty,
+      maxPenalty: 20,
+      count,
+      feedback: `🚨 ${count} extrovert-bias phrase(s) found`,
+      deduction: `-${penalty} pts: ${count} extrovert-bias phrase(s)`
+    };
+  }
+
+  return {
+    penalty: 0,
+    maxPenalty: 20,
+    count: 0,
+    feedback: '✅ No extrovert-bias phrases',
+    deduction: null
+  };
+}
+
+/**
+ * Score red flag phrases - penalize toxic culture signals
+ * @param {Array} warnings - Array of warning objects from validateJDContent
+ * @returns {Object} { penalty, maxPenalty, count, feedback, deduction }
+ */
+export function scoreRedFlags(warnings) {
+  const count = warnings.filter(w => w.type === 'red-flag').length;
+
+  if (count > 0) {
+    const penalty = Math.min(25, count * 5);
+    return {
+      penalty,
+      maxPenalty: 25,
+      count,
+      feedback: `🚨 ${count} red flag phrase(s) found`,
+      deduction: `-${penalty} pts: ${count} red flag phrase(s)`
+    };
+  }
+
+  return {
+    penalty: 0,
+    maxPenalty: 25,
+    count: 0,
+    feedback: '✅ No red flag phrases',
+    deduction: null
+  };
+}
+
+/**
+ * Score compensation transparency - require salary range for external postings
+ * @param {string} text - The JD text to validate
+ * @param {boolean} isInternal - Whether this is an internal posting
+ * @returns {Object} { penalty, maxPenalty, hasCompensation, feedback, deduction, skipped }
+ */
+export function scoreCompensation(text, isInternal) {
+  if (isInternal) {
+    return {
+      penalty: 0,
+      maxPenalty: 10,
+      hasCompensation: null,
+      feedback: 'ℹ️ Internal posting - compensation check skipped',
+      deduction: null,
+      skipped: true
+    };
+  }
+
+  // Adversarial fix: Added non-$ currency patterns (USD, EUR, GBP) for international JDs
+  const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
+                          /salary.*\$[\d,]+/i.test(text) ||
+                          /compensation.*\$[\d,]+/i.test(text) ||
+                          /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text) ||
+                          // Non-$ formats: "150,000 - 200,000 USD" or "€80,000 - €120,000"
+                          /[\d,]+\s*[-–—]\s*[\d,]+\s*(USD|EUR|GBP|CAD|AUD)/i.test(text) ||
+                          /[€£][\d,]+\s*[-–—]\s*[€£][\d,]+/i.test(text);
+
+  if (hasCompensation) {
+    return {
+      penalty: 0,
+      maxPenalty: 10,
+      hasCompensation: true,
+      feedback: '✅ Compensation range included',
+      deduction: null,
+      skipped: false
+    };
+  }
+
+  return {
+    penalty: 10,
+    maxPenalty: 10,
+    hasCompensation: false,
+    feedback: '⚠️ No compensation range found',
+    deduction: '-10 pts: No compensation range found',
+    skipped: false
+  };
+}
+
+/**
+ * Score encouragement statement - require "60-70%" or similar inclusive language
+ * @param {string} text - The JD text to validate
+ * @returns {Object} { penalty, maxPenalty, hasEncouragement, feedback, deduction }
+ */
+export function scoreEncouragement(text) {
+  // Adversarial fix: Narrowed "don't meet all" to require "qualifications" or "requirements" context
+  // Prevents gaming with unrelated text like "We don't meet all our goals"
+  const hasEncouragement = /60[-–]70%|60\s*[-–]\s*70\s*%|60\s+to\s+70\s*%|meet.*most.*(requirements|qualifications)|we\s+encourage.*apply|don't.*meet.*all.*(qualifications|requirements)/i.test(text);
+
+  if (hasEncouragement) {
+    return {
+      penalty: 0,
+      maxPenalty: 5,
+      hasEncouragement: true,
+      feedback: '✅ Includes encouragement statement',
+      deduction: null
+    };
+  }
+
+  return {
+    penalty: 5,
+    maxPenalty: 5,
+    hasEncouragement: false,
+    feedback: '⚠️ Missing encouragement statement (e.g., "If you meet 60-70%...")',
+    deduction: '-5 pts: Missing "60-70%" encouragement statement'
+  };
+}
+
+/**
+ * Score AI slop - penalize generic AI-generated language
+ * @param {string} text - The JD text to validate
+ * @returns {Object} { penalty, maxPenalty, slopPenalty, issues, feedback, deduction }
+ */
+export function scoreSlopPenalty(text) {
+  const slopPenalty = getSlopPenalty(text);
+  const slopIssues = [];
+
+  if (slopPenalty.penalty > 0) {
+    const penalty = Math.min(5, Math.floor(slopPenalty.penalty * 0.6));
+    if (slopPenalty.issues && slopPenalty.issues.length > 0) {
+      slopIssues.push(...slopPenalty.issues.slice(0, 2));
+    }
+
+    if (penalty > 0) {
+      return {
+        penalty,
+        maxPenalty: 5,
+        slopPenalty,
+        issues: slopIssues,
+        feedback: '⚠️ AI-generated language detected - consider making more authentic',
+        deduction: `-${penalty} pts: AI slop detected`
+      };
+    }
+  }
+
+  return {
+    penalty: 0,
+    maxPenalty: 5,
+    slopPenalty,
+    issues: slopIssues,
+    feedback: null,
+    deduction: null
+  };
+}
+
+// ============================================================================
+// Main Validation Function
+// ============================================================================
+
 /**
  * Validate a job description and return a score with feedback
  * @param {string} text - The JD text to validate
@@ -29,104 +273,62 @@ export function validateDocument(text, postingType = 'external') {
   // Get JD content validation (inclusive language, red flags)
   const jdValidation = validateJDContent(text);
 
-  // 1. Check word count (ideal: 400-700 words)
-  const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-  if (wordCount >= 400 && wordCount <= 700) {
-    feedback.push(`✅ Good length: ${wordCount} words (ideal: 400-700)`);
-  } else if (wordCount < 400) {
-    const penalty = Math.min(15, Math.floor((400 - wordCount) / 20));
-    score -= penalty;
-    deductions.push(`-${penalty} pts: Too short (${wordCount} words, aim for 400+)`);
-    feedback.push(`⚠️ Short: ${wordCount} words (aim for 400-700)`);
-  } else {
-    const penalty = Math.min(10, Math.floor((wordCount - 700) / 50));
-    score -= penalty;
-    deductions.push(`-${penalty} pts: Too long (${wordCount} words, aim for ≤700)`);
-    feedback.push(`⚠️ Long: ${wordCount} words (aim for 400-700)`);
+  // 1. Word count scoring
+  const wordCountResult = scoreWordCount(text);
+  feedback.push(wordCountResult.feedback);
+  if (wordCountResult.penalty > 0) {
+    score -= wordCountResult.penalty;
+    deductions.push(wordCountResult.deduction);
   }
 
-  // 2. Check for masculine-coded words (-5 pts each, max -25)
-  const masculineCount = jdValidation.warnings.filter(w => w.type === 'masculine-coded').length;
-  if (masculineCount > 0) {
-    const penalty = Math.min(25, masculineCount * 5);
-    score -= penalty;
-    deductions.push(`-${penalty} pts: ${masculineCount} masculine-coded word(s)`);
-    feedback.push(`🚨 ${masculineCount} masculine-coded word(s) found`);
-  } else {
-    feedback.push('✅ No masculine-coded words');
+  // 2. Masculine-coded words scoring
+  const masculineResult = scoreMasculineCoded(jdValidation.warnings);
+  feedback.push(masculineResult.feedback);
+  if (masculineResult.penalty > 0) {
+    score -= masculineResult.penalty;
+    deductions.push(masculineResult.deduction);
   }
 
-  // 3. Check for extrovert-bias phrases (-5 pts each, max -20)
-  const extrovertCount = jdValidation.warnings.filter(w => w.type === 'extrovert-bias').length;
-  if (extrovertCount > 0) {
-    const penalty = Math.min(20, extrovertCount * 5);
-    score -= penalty;
-    deductions.push(`-${penalty} pts: ${extrovertCount} extrovert-bias phrase(s)`);
-    feedback.push(`🚨 ${extrovertCount} extrovert-bias phrase(s) found`);
-  } else {
-    feedback.push('✅ No extrovert-bias phrases');
+  // 3. Extrovert-bias phrases scoring
+  const extrovertResult = scoreExtrovertBias(jdValidation.warnings);
+  feedback.push(extrovertResult.feedback);
+  if (extrovertResult.penalty > 0) {
+    score -= extrovertResult.penalty;
+    deductions.push(extrovertResult.deduction);
   }
 
-  // 4. Check for red flag phrases (-5 pts each, max -25)
-  const redFlagCount = jdValidation.warnings.filter(w => w.type === 'red-flag').length;
-  if (redFlagCount > 0) {
-    const penalty = Math.min(25, redFlagCount * 5);
-    score -= penalty;
-    deductions.push(`-${penalty} pts: ${redFlagCount} red flag phrase(s)`);
-    feedback.push(`🚨 ${redFlagCount} red flag phrase(s) found`);
-  } else {
-    feedback.push('✅ No red flag phrases');
+  // 4. Red flag phrases scoring
+  const redFlagResult = scoreRedFlags(jdValidation.warnings);
+  feedback.push(redFlagResult.feedback);
+  if (redFlagResult.penalty > 0) {
+    score -= redFlagResult.penalty;
+    deductions.push(redFlagResult.deduction);
   }
 
-  // 5. Check for compensation range (-10 pts if missing) - skip for internal postings
-  // Adversarial fix: Added non-$ currency patterns (USD, EUR, GBP) for international JDs
-  if (!isInternal) {
-    const hasCompensation = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
-                            /salary.*\$[\d,]+/i.test(text) ||
-                            /compensation.*\$[\d,]+/i.test(text) ||
-                            /\$[\d,]+k?\s*[-–—]\s*\$[\d,]+k?/i.test(text) ||
-                            // Non-$ formats: "150,000 - 200,000 USD" or "€80,000 - €120,000"
-                            /[\d,]+\s*[-–—]\s*[\d,]+\s*(USD|EUR|GBP|CAD|AUD)/i.test(text) ||
-                            /[€£][\d,]+\s*[-–—]\s*[€£][\d,]+/i.test(text);
-    if (hasCompensation) {
-      feedback.push('✅ Compensation range included');
-    } else {
-      score -= 10;
-      deductions.push('-10 pts: No compensation range found');
-      feedback.push('⚠️ No compensation range found');
-    }
-  } else {
-    feedback.push('ℹ️ Internal posting - compensation check skipped');
+  // 5. Compensation transparency scoring
+  const compensationResult = scoreCompensation(text, isInternal);
+  feedback.push(compensationResult.feedback);
+  if (compensationResult.penalty > 0) {
+    score -= compensationResult.penalty;
+    deductions.push(compensationResult.deduction);
   }
 
-  // 6. Check for encouragement statement (-5 pts if missing)
-  // Adversarial fix: Narrowed "don't meet all" to require "qualifications" or "requirements" context
-  // Prevents gaming with unrelated text like "We don't meet all our goals"
-  const hasEncouragement = /60[-–]70%|60\s*[-–]\s*70\s*%|60\s+to\s+70\s*%|meet.*most.*(requirements|qualifications)|we\s+encourage.*apply|don't.*meet.*all.*(qualifications|requirements)/i.test(text);
-  if (hasEncouragement) {
-    feedback.push('✅ Includes encouragement statement');
-  } else {
-    score -= 5;
-    deductions.push('-5 pts: Missing "60-70%" encouragement statement');
-    feedback.push('⚠️ Missing encouragement statement (e.g., "If you meet 60-70%...")');
+  // 6. Encouragement statement scoring
+  const encouragementResult = scoreEncouragement(text);
+  feedback.push(encouragementResult.feedback);
+  if (encouragementResult.penalty > 0) {
+    score -= encouragementResult.penalty;
+    deductions.push(encouragementResult.deduction);
   }
 
-  // AI slop detection - JDs should be authentic and specific
-  // Aligned with inline validator: Math.min(5, Math.floor(penalty * 0.6))
-  const slopPenalty = getSlopPenalty(text);
-  let slopDeduction = 0;
-  const slopIssues = [];
-
-  if (slopPenalty.penalty > 0) {
-    slopDeduction = Math.min(5, Math.floor(slopPenalty.penalty * 0.6));
-    if (slopPenalty.issues && slopPenalty.issues.length > 0) {
-      slopIssues.push(...slopPenalty.issues.slice(0, 2));
-    }
-    score -= slopDeduction;
-    if (slopDeduction > 0) {
-      deductions.push(`-${slopDeduction} pts: AI slop detected`);
-      feedback.push('⚠️ AI-generated language detected - consider making more authentic');
-    }
+  // 7. AI slop scoring
+  const slopResult = scoreSlopPenalty(text);
+  if (slopResult.feedback) {
+    feedback.push(slopResult.feedback);
+  }
+  if (slopResult.penalty > 0) {
+    score -= slopResult.penalty;
+    deductions.push(slopResult.deduction);
   }
 
   // Floor score at 0
@@ -137,14 +339,14 @@ export function validateDocument(text, postingType = 'external') {
     grade: getGrade(score),
     feedback,
     deductions,
-    wordCount,
+    wordCount: wordCountResult.wordCount,
     warnings: jdValidation.warnings,
     warningCount: jdValidation.warnings.length,
     isInternal,
     slopDetection: {
-      ...slopPenalty,
-      deduction: slopDeduction,
-      issues: slopIssues
+      ...slopResult.slopPenalty,
+      deduction: slopResult.penalty,
+      issues: slopResult.issues
     }
   };
 }
