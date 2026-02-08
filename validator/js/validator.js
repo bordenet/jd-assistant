@@ -11,6 +11,308 @@ import { calculateSlopScore, getSlopPenalty } from './slop-detection.js';
 export { calculateSlopScore };
 
 // ============================================================================
+// CONFIGURATION: Language Pattern Dictionaries
+// These arrays define the patterns used by detection and scoring functions.
+// ============================================================================
+
+/**
+ * Masculine-coded words that discourage women from applying
+ * Based on Gaucher et al. (2011) JPSP and Textio research
+ */
+const MASCULINE_CODED = [
+  'aggressive', 'ambitious', 'assertive', 'competitive', 'confident',
+  'decisive', 'determined', 'dominant', 'driven', 'fearless',
+  'independent', 'ninja', 'rockstar', 'guru', 'self-reliant',
+  'self-sufficient', 'superior',
+  // Added from phase1.md alignment review (8 missing words)
+  'leader', 'go-getter', 'hard-charging', 'strong', 'tough',
+  'warrior', 'superhero', 'superstar', 'boss'
+];
+
+/**
+ * Extrovert-bias phrases that discourage introverts and neurodivergent candidates
+ * Based on Deloitte neurodiversity research
+ */
+const EXTROVERT_BIAS = [
+  'outgoing', 'high-energy', 'energetic', 'people person', 'gregarious',
+  'strong communicator', 'excellent verbal', 'team player'
+];
+
+/**
+ * Red flag phrases that signal toxic culture or poor work-life balance
+ * Based on Glassdoor, Blind, and LinkedIn data
+ */
+const RED_FLAGS = [
+  'fast-paced', 'like a family', 'wear many hats', 'always-on',
+  'hustle', 'grind', 'unlimited pto', 'work hard play hard',
+  'hit the ground running', 'self-starter', 'thick skin',
+  'no ego', 'drama-free', 'whatever it takes', 'passion required'
+];
+
+/**
+ * Suggestions for replacing problematic language
+ */
+const SUGGESTIONS = {
+  // Masculine-coded
+  'aggressive': 'Use "proactive" or "bold" instead',
+  'ambitious': 'Use "motivated" or "goal-oriented" instead',
+  'assertive': 'Use "confident communicator" instead',
+  'competitive': 'Use "collaborative" or "results-oriented" instead',
+  'confident': 'Use "capable" or "skilled" instead',
+  'decisive': 'Use "sound decision-maker" instead',
+  'determined': 'Use "dedicated" or "committed" instead',
+  'dominant': 'Use "influential" or "guiding" instead',
+  'driven': 'Use "motivated" or "dedicated" instead',
+  'fearless': 'Use "resilient" or "innovative" instead',
+  'independent': 'Use "self-directed" or "ownership-focused" instead',
+  'ninja': 'Use "expert" or "specialist" instead',
+  'rockstar': 'Use "expert" or "impact player" instead',
+  'guru': 'Use "expert" or "specialist" instead',
+  'self-reliant': 'Use "capable" or "resourceful" instead',
+  'self-sufficient': 'Use "capable" or "resourceful" instead',
+  'superior': 'Use "excellent" or "skilled" instead',
+  // Added from phase1.md alignment review (8 missing words)
+  'leader': 'Use "guide" or "mentor" instead',
+  'go-getter': 'Use "motivated" or "proactive" instead',
+  'hard-charging': 'Use "dedicated" or "committed" instead',
+  'strong': 'Use "skilled" or "experienced" instead',
+  'tough': 'Use "resilient" or "adaptable" instead',
+  'warrior': 'Use "advocate" or "champion" instead',
+  'superhero': 'Use "expert" or "specialist" instead',
+  'superstar': 'Use "high performer" or "expert" instead',
+  'boss': 'Use "manager" or "lead" instead',
+
+  // Extrovert-bias
+  'outgoing': 'Use "collaborative" or remove if not essential',
+  'high-energy': 'Use "dynamic" or "engaged" instead',
+  'energetic': 'Use "engaged" or "motivated" instead',
+  'people person': 'Use "collaborative" or "team-oriented" instead',
+  'gregarious': 'Use "collaborative" instead',
+  'strong communicator': 'Use "shares ideas clearly via writing, visuals, or discussion"',
+  'excellent verbal': 'Use "communicates effectively" instead',
+  'team player': 'Use "contributes to team goals through your strengths"',
+
+  // Red flags
+  'fast-paced': 'Use "dynamic projects with clear priorities" instead',
+  'like a family': 'Use "supportive, collaborative team" instead',
+  'wear many hats': 'Use "versatile role with growth opportunities" instead',
+  'always-on': 'Use "flexible hours; async work" instead',
+  'hustle': 'Use "dedicated effort" or "commitment" instead',
+  'grind': 'Use "dedicated effort" or "commitment" instead',
+  'unlimited pto': 'Use "20+ PTO days + recharge policy" instead',
+  'work hard play hard': 'Use "balanced work culture" instead',
+  'hit the ground running': 'Use "ramp up quickly with support" instead',
+  'self-starter': 'Use "self-directed" or "ownership-focused" instead',
+  'thick skin': 'Use "resilient" or "adaptable" instead',
+  'no ego': 'Use "collaborative" or "humble" instead',
+  'drama-free': 'Use "professional" or "respectful" instead',
+  'whatever it takes': 'Use "committed to delivering results" instead',
+  'passion required': 'Use "deeply engaged in problem-solving" instead'
+};
+
+// ============================================================================
+// HELPER FUNCTIONS: Mandated Section Handling
+// ============================================================================
+
+/**
+ * Extract company-mandated sections from text
+ * @param {string} text - The text to process
+ * @returns {Object} Object with cleanText and mandatedSections
+ */
+function extractMandatedSections(text) {
+  const mandatedSections = [];
+  let cleanText = text;
+
+  // Extract COMPANY_PREAMBLE sections
+  const preambleRegex = /\[COMPANY_PREAMBLE\]([\s\S]*?)\[\/COMPANY_PREAMBLE\]/gi;
+  let match;
+  while ((match = preambleRegex.exec(text)) !== null) {
+    mandatedSections.push({
+      type: 'preamble',
+      content: match[1]
+    });
+  }
+
+  // Extract COMPANY_LEGAL_TEXT sections
+  const legalRegex = /\[COMPANY_LEGAL_TEXT\]([\s\S]*?)\[\/COMPANY_LEGAL_TEXT\]/gi;
+  while ((match = legalRegex.exec(text)) !== null) {
+    mandatedSections.push({
+      type: 'legal',
+      content: match[1]
+    });
+  }
+
+  // Remove mandated sections from text for validation
+  cleanText = text.replace(preambleRegex, '').replace(legalRegex, '');
+
+  return { cleanText, mandatedSections };
+}
+
+/**
+ * Check if a word/phrase appears in mandated sections
+ * @param {string} word - The word or phrase to check
+ * @param {Array} mandatedSections - Array of mandated section objects
+ * @returns {boolean} True if word appears in mandated sections
+ */
+function isInMandatedSection(word, mandatedSections) {
+  const lowerWord = word.toLowerCase();
+  return mandatedSections.some(section =>
+    section.content.toLowerCase().includes(lowerWord)
+  );
+}
+
+// ============================================================================
+// Individual Detection Functions (exported for testing)
+// Each returns structured detection results: { found, count, ... }
+// Following the genesis pattern: detect*() → score*() → validate*()
+// ============================================================================
+
+/**
+ * Detect masculine-coded words in text
+ * @param {string} text - The text to analyze
+ * @returns {Object} { found, count, words }
+ */
+export function detectMasculineCoded(text) {
+  const { cleanText, mandatedSections } = extractMandatedSections(text);
+  const foundWords = [];
+
+  MASCULINE_CODED.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    if (regex.test(cleanText)) {
+      if (!isInMandatedSection(word, mandatedSections)) {
+        foundWords.push(word.toLowerCase());
+      }
+    }
+  });
+
+  return {
+    found: foundWords.length > 0,
+    count: foundWords.length,
+    words: foundWords
+  };
+}
+
+/**
+ * Detect extrovert-bias phrases in text
+ * @param {string} text - The text to analyze
+ * @returns {Object} { found, count, phrases }
+ */
+export function detectExtrovertBias(text) {
+  const { cleanText, mandatedSections } = extractMandatedSections(text);
+  const foundPhrases = [];
+
+  EXTROVERT_BIAS.forEach(phrase => {
+    const flexiblePattern = phrase.replace(/[-\s]+/g, '[-\\s]+');
+    const regex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
+    if (regex.test(cleanText)) {
+      if (!isInMandatedSection(phrase, mandatedSections)) {
+        foundPhrases.push(phrase.toLowerCase());
+      }
+    }
+  });
+
+  return {
+    found: foundPhrases.length > 0,
+    count: foundPhrases.length,
+    phrases: foundPhrases
+  };
+}
+
+/**
+ * Detect red flag phrases in text
+ * @param {string} text - The text to analyze
+ * @returns {Object} { found, count, phrases }
+ */
+export function detectRedFlags(text) {
+  const { cleanText, mandatedSections } = extractMandatedSections(text);
+  const foundPhrases = [];
+
+  RED_FLAGS.forEach(phrase => {
+    const flexiblePattern = phrase.replace(/[-\s]+/g, '[-\\s]+');
+    const regex = new RegExp(`\\b${flexiblePattern}\\b`, 'gi');
+    if (regex.test(cleanText)) {
+      if (!isInMandatedSection(phrase, mandatedSections)) {
+        foundPhrases.push(phrase.toLowerCase());
+      }
+    }
+  });
+
+  return {
+    found: foundPhrases.length > 0,
+    count: foundPhrases.length,
+    phrases: foundPhrases
+  };
+}
+
+/**
+ * Detect compensation information in text
+ * @param {string} text - The text to analyze
+ * @returns {Object} { found, hasSalaryRange, hasHourlyRange, hasBonusMention }
+ */
+export function detectCompensation(text) {
+  const hasSalaryRange = /\$[\d,]+\s*[-–—]\s*\$[\d,]+/i.test(text) ||
+                         /salary.*\$[\d,]+/i.test(text) ||
+                         /compensation.*\$[\d,]+/i.test(text) ||
+                         /(USD|EUR|GBP|CAD|AUD)\s*[\d,]+\s*[-–—]\s*[\d,]+/i.test(text) ||
+                         /[\d,]+\s*(USD|EUR|GBP|CAD|AUD)\s*[-–—]/i.test(text);
+
+  const hasHourlyRange = /\$[\d.]+\s*[-–—]\s*\$[\d.]+\s*\/?\s*(hour|hr)/i.test(text) ||
+                         /\$[\d.]+\s*\/?\s*(hour|hr)/i.test(text);
+
+  const hasBonusMention = /bonus|equity|stock|RSU|options/i.test(text);
+
+  return {
+    found: hasSalaryRange || hasHourlyRange,
+    hasSalaryRange,
+    hasHourlyRange,
+    hasBonusMention
+  };
+}
+
+/**
+ * Detect encouragement statement in text
+ * @param {string} text - The text to analyze
+ * @returns {Object} { found, indicators }
+ */
+export function detectEncouragement(text) {
+  const has60to70 = /60[-–]70%|60\s*[-–]\s*70\s*%|60\s+to\s+70\s*%/i.test(text);
+  const hasMeetMost = /meet.*most.*(requirements|qualifications)/i.test(text);
+  const hasEncourageApply = /we\s+encourage.*apply/i.test(text);
+  const hasDontMeetAll = /don't.*meet.*all.*(qualifications|requirements)/i.test(text);
+
+  const found = has60to70 || hasMeetMost || hasEncourageApply || hasDontMeetAll;
+
+  return {
+    found,
+    indicators: [
+      has60to70 && '60-70% threshold mentioned',
+      hasMeetMost && 'Meet most requirements language',
+      hasEncourageApply && 'Encourage to apply language',
+      hasDontMeetAll && "Don't meet all qualifications language"
+    ].filter(Boolean)
+  };
+}
+
+/**
+ * Detect word count characteristics
+ * @param {string} text - The text to analyze
+ * @returns {Object} { wordCount, isIdeal, isTooShort, isTooLong }
+ */
+export function detectWordCount(text) {
+  const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+  const isIdeal = wordCount >= 400 && wordCount <= 700;
+  const isTooShort = wordCount < 400;
+  const isTooLong = wordCount > 700;
+
+  return {
+    wordCount,
+    isIdeal,
+    isTooShort,
+    isTooLong
+  };
+}
+
+// ============================================================================
 // Individual Scoring Functions (exported for testing)
 // Each returns { penalty, maxPenalty, feedback, deduction? }
 // ============================================================================
@@ -385,148 +687,6 @@ export function getScoreLabel(score) {
   if (score >= 50) return 'Needs Work';
   if (score >= 30) return 'Draft';
   return 'Incomplete';
-}
-
-/**
- * Masculine-coded words that discourage women from applying
- * Based on Gaucher et al. (2011) JPSP and Textio research
- */
-const MASCULINE_CODED = [
-  'aggressive', 'ambitious', 'assertive', 'competitive', 'confident',
-  'decisive', 'determined', 'dominant', 'driven', 'fearless',
-  'independent', 'ninja', 'rockstar', 'guru', 'self-reliant',
-  'self-sufficient', 'superior',
-  // Added from phase1.md alignment review (8 missing words)
-  'leader', 'go-getter', 'hard-charging', 'strong', 'tough',
-  'warrior', 'superhero', 'superstar', 'boss'
-];
-
-/**
- * Extrovert-bias phrases that discourage introverts and neurodivergent candidates
- * Based on Deloitte neurodiversity research
- */
-const EXTROVERT_BIAS = [
-  'outgoing', 'high-energy', 'energetic', 'people person', 'gregarious',
-  'strong communicator', 'excellent verbal', 'team player'
-];
-
-/**
- * Red flag phrases that signal toxic culture or poor work-life balance
- * Based on Glassdoor, Blind, and LinkedIn data
- */
-const RED_FLAGS = [
-  'fast-paced', 'like a family', 'wear many hats', 'always-on',
-  'hustle', 'grind', 'unlimited pto', 'work hard play hard',
-  'hit the ground running', 'self-starter', 'thick skin',
-  'no ego', 'drama-free', 'whatever it takes', 'passion required'
-];
-
-/**
- * Suggestions for replacing problematic language
- */
-const SUGGESTIONS = {
-  // Masculine-coded
-  'aggressive': 'Use "proactive" or "bold" instead',
-  'ambitious': 'Use "motivated" or "goal-oriented" instead',
-  'assertive': 'Use "confident communicator" instead',
-  'competitive': 'Use "collaborative" or "results-oriented" instead',
-  'confident': 'Use "capable" or "skilled" instead',
-  'decisive': 'Use "sound decision-maker" instead',
-  'determined': 'Use "dedicated" or "committed" instead',
-  'dominant': 'Use "influential" or "guiding" instead',
-  'driven': 'Use "motivated" or "dedicated" instead',
-  'fearless': 'Use "resilient" or "innovative" instead',
-  'independent': 'Use "self-directed" or "ownership-focused" instead',
-  'ninja': 'Use "expert" or "specialist" instead',
-  'rockstar': 'Use "expert" or "impact player" instead',
-  'guru': 'Use "expert" or "specialist" instead',
-  'self-reliant': 'Use "capable" or "resourceful" instead',
-  'self-sufficient': 'Use "capable" or "resourceful" instead',
-  'superior': 'Use "excellent" or "skilled" instead',
-  // Added from phase1.md alignment review (8 missing words)
-  'leader': 'Use "guide" or "mentor" instead',
-  'go-getter': 'Use "motivated" or "proactive" instead',
-  'hard-charging': 'Use "dedicated" or "committed" instead',
-  'strong': 'Use "skilled" or "experienced" instead',
-  'tough': 'Use "resilient" or "adaptable" instead',
-  'warrior': 'Use "advocate" or "champion" instead',
-  'superhero': 'Use "expert" or "specialist" instead',
-  'superstar': 'Use "high performer" or "expert" instead',
-  'boss': 'Use "manager" or "lead" instead',
-
-  // Extrovert-bias
-  'outgoing': 'Use "collaborative" or remove if not essential',
-  'high-energy': 'Use "dynamic" or "engaged" instead',
-  'energetic': 'Use "engaged" or "motivated" instead',
-  'people person': 'Use "collaborative" or "team-oriented" instead',
-  'gregarious': 'Use "collaborative" instead',
-  'strong communicator': 'Use "shares ideas clearly via writing, visuals, or discussion"',
-  'excellent verbal': 'Use "communicates effectively" instead',
-  'team player': 'Use "contributes to team goals through your strengths"',
-
-  // Red flags
-  'fast-paced': 'Use "dynamic projects with clear priorities" instead',
-  'like a family': 'Use "supportive, collaborative team" instead',
-  'wear many hats': 'Use "versatile role with growth opportunities" instead',
-  'always-on': 'Use "flexible hours; async work" instead',
-  'hustle': 'Use "dedicated effort" or "commitment" instead',
-  'grind': 'Use "dedicated effort" or "commitment" instead',
-  'unlimited pto': 'Use "20+ PTO days + recharge policy" instead',
-  'work hard play hard': 'Use "balanced work culture" instead',
-  'hit the ground running': 'Use "ramp up quickly with support" instead',
-  'self-starter': 'Use "self-directed" or "ownership-focused" instead',
-  'thick skin': 'Use "resilient" or "adaptable" instead',
-  'no ego': 'Use "collaborative" or "humble" instead',
-  'drama-free': 'Use "professional" or "respectful" instead',
-  'whatever it takes': 'Use "committed to delivering results" instead',
-  'passion required': 'Use "deeply engaged in problem-solving" instead'
-};
-
-/**
- * Extract company-mandated sections from text
- * @param {string} text - The text to process
- * @returns {Object} Object with cleanText and mandatedSections
- */
-function extractMandatedSections(text) {
-  const mandatedSections = [];
-  let cleanText = text;
-
-  // Extract COMPANY_PREAMBLE sections
-  const preambleRegex = /\[COMPANY_PREAMBLE\]([\s\S]*?)\[\/COMPANY_PREAMBLE\]/gi;
-  let match;
-  while ((match = preambleRegex.exec(text)) !== null) {
-    mandatedSections.push({
-      type: 'preamble',
-      content: match[1]
-    });
-  }
-
-  // Extract COMPANY_LEGAL_TEXT sections
-  const legalRegex = /\[COMPANY_LEGAL_TEXT\]([\s\S]*?)\[\/COMPANY_LEGAL_TEXT\]/gi;
-  while ((match = legalRegex.exec(text)) !== null) {
-    mandatedSections.push({
-      type: 'legal',
-      content: match[1]
-    });
-  }
-
-  // Remove mandated sections from text for validation
-  cleanText = text.replace(preambleRegex, '').replace(legalRegex, '');
-
-  return { cleanText, mandatedSections };
-}
-
-/**
- * Check if a word/phrase appears in mandated sections
- * @param {string} word - The word or phrase to check
- * @param {Array} mandatedSections - Array of mandated section objects
- * @returns {boolean} True if word appears in mandated sections
- */
-function isInMandatedSection(word, mandatedSections) {
-  const lowerWord = word.toLowerCase();
-  return mandatedSections.some(section =>
-    section.content.toLowerCase().includes(lowerWord)
-  );
 }
 
 /**

@@ -18,7 +18,14 @@ import {
   scoreRedFlags,
   scoreCompensation,
   scoreEncouragement,
-  scoreSlopPenalty
+  scoreSlopPenalty,
+  // Individual detection functions
+  detectMasculineCoded,
+  detectExtrovertBias,
+  detectRedFlags,
+  detectCompensation,
+  detectEncouragement,
+  detectWordCount
 } from '../../validator/js/validator.js';
 
 // ============================================================================
@@ -336,6 +343,112 @@ describe('Scoring Functions', () => {
       // Even very sloppy text should cap at 5
       const result = scoreSlopPenalty('Leverage synergies to drive innovation and deliver world-class solutions.');
       expect(result.penalty).toBeLessThanOrEqual(5);
+    });
+  });
+});
+
+// ============================================================================
+// Detection Functions Tests
+// ============================================================================
+// Detection functions return WHAT WAS FOUND (boolean flags, counts, indicators)
+// They separate detection from scoring per the genesis architecture pattern.
+
+describe('Detection Functions', () => {
+  describe('detectMasculineCoded', () => {
+    test('should detect masculine-coded words', () => {
+      const result = detectMasculineCoded('We need a competitive ninja who is driven');
+      expect(result.found).toBe(true);
+      expect(result.count).toBeGreaterThan(0);
+      expect(result.words).toEqual(expect.arrayContaining(['competitive', 'ninja', 'driven']));
+    });
+
+    test('should return empty when no masculine-coded words', () => {
+      const result = detectMasculineCoded('We seek a collaborative team member');
+      expect(result.found).toBe(false);
+      expect(result.count).toBe(0);
+      expect(result.words).toEqual([]);
+    });
+  });
+
+  describe('detectExtrovertBias', () => {
+    test('should detect extrovert-bias phrases', () => {
+      const result = detectExtrovertBias('Must be high-energy and outgoing');
+      expect(result.found).toBe(true);
+      expect(result.count).toBeGreaterThan(0);
+      expect(result.phrases.length).toBeGreaterThan(0);
+    });
+
+    test('should return empty when no extrovert-bias phrases', () => {
+      const result = detectExtrovertBias('Work independently or with the team');
+      expect(result.found).toBe(false);
+      expect(result.count).toBe(0);
+      expect(result.phrases).toEqual([]);
+    });
+  });
+
+  describe('detectRedFlags', () => {
+    test('should detect red flag phrases', () => {
+      const result = detectRedFlags('This is a fast-paced environment where we work hard play hard');
+      expect(result.found).toBe(true);
+      expect(result.count).toBeGreaterThan(0);
+      expect(result.phrases.length).toBeGreaterThan(0);
+    });
+
+    test('should return empty when no red flags', () => {
+      const result = detectRedFlags('We offer flexible work arrangements');
+      expect(result.found).toBe(false);
+      expect(result.count).toBe(0);
+      expect(result.phrases).toEqual([]);
+    });
+  });
+
+  describe('detectCompensation', () => {
+    test('should detect salary range', () => {
+      const result = detectCompensation('Compensation: $170,000 - $220,000');
+      expect(result.found).toBe(true);
+      expect(result.hasSalaryRange).toBe(true);
+    });
+
+    test('should return false when no compensation info', () => {
+      const result = detectCompensation('We offer great benefits');
+      expect(result.found).toBe(false);
+      expect(result.hasSalaryRange).toBe(false);
+    });
+  });
+
+  describe('detectEncouragement', () => {
+    test('should detect encouragement statement', () => {
+      const result = detectEncouragement("If you meet 60-70% of the requirements, we encourage you to apply");
+      expect(result.found).toBe(true);
+    });
+
+    test('should return false when no encouragement', () => {
+      const result = detectEncouragement('Submit your resume');
+      expect(result.found).toBe(false);
+    });
+  });
+
+  describe('detectWordCount', () => {
+    test('should return word count details', () => {
+      const result = detectWordCount('word '.repeat(500));
+      expect(result.wordCount).toBe(500);
+      expect(result.isIdeal).toBe(true);
+      expect(result.isTooShort).toBe(false);
+      expect(result.isTooLong).toBe(false);
+    });
+
+    test('should detect too short', () => {
+      const result = detectWordCount('word '.repeat(100));
+      expect(result.wordCount).toBe(100);
+      expect(result.isIdeal).toBe(false);
+      expect(result.isTooShort).toBe(true);
+    });
+
+    test('should detect too long', () => {
+      const result = detectWordCount('word '.repeat(1000));
+      expect(result.wordCount).toBe(1000);
+      expect(result.isIdeal).toBe(false);
+      expect(result.isTooLong).toBe(true);
     });
   });
 });
