@@ -293,15 +293,13 @@ function extractRoleLevel(lines, markdown) {
  * Extract location from markdown
  */
 function extractLocation(markdown) {
-  // Pattern: "Location: X" or "Based in X"
-  const locationMatch = markdown.match(/(?:location|based in|office)[:\s]+([a-zA-Z\s,]+?)(?:\n|$)/i);
+  // Pattern: "Location: X" or "Based in X" - allow parentheses, letters, spaces, commas
+  const locationMatch = markdown.match(/(?:location|based in|office)[:\s]+([a-zA-Z\s,()-]+?)(?:\n|$)/i);
   if (locationMatch) return locationMatch[1].trim();
 
-  // Pattern: "Remote" standalone
-  if (/\bremote\b/i.test(markdown)) {
-    const remoteMatch = markdown.match(/\b(fully remote|remote[- ]first|remote|hybrid)\b/i);
-    if (remoteMatch) return remoteMatch[1];
-  }
+  // Pattern: "Remote" or "Hybrid" standalone
+  const remoteMatch = markdown.match(/\b(fully remote|remote[- ]first|remote|hybrid)\b/i);
+  if (remoteMatch) return remoteMatch[1];
 
   return '';
 }
@@ -329,8 +327,8 @@ function extractTechStack(markdown) {
   const lowerMarkdown = markdown.toLowerCase();
 
   for (const tech of TECH_KEYWORDS) {
-    // Use word boundary to avoid partial matches
-    const regex = new RegExp(`\\b${tech}\\b`, 'i');
+    // Use word boundary to avoid partial matches, allow optional 's' for plurals
+    const regex = new RegExp(`\\b${tech}s?\\b`, 'i');
     if (regex.test(lowerMarkdown)) {
       found.add(tech.toUpperCase() === tech ? tech : tech.charAt(0).toUpperCase() + tech.slice(1));
     }
