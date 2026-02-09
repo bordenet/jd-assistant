@@ -121,7 +121,6 @@ const SUGGESTIONS = {
  */
 function extractMandatedSections(text) {
   const mandatedSections = [];
-  let cleanText = text;
 
   // Extract COMPANY_PREAMBLE sections
   const preambleRegex = /\[COMPANY_PREAMBLE\]([\s\S]*?)\[\/COMPANY_PREAMBLE\]/gi;
@@ -143,7 +142,7 @@ function extractMandatedSections(text) {
   }
 
   // Remove mandated sections from text for validation
-  cleanText = text.replace(preambleRegex, '').replace(legalRegex, '');
+  const cleanText = text.replace(preambleRegex, '').replace(legalRegex, '');
 
   return { cleanText, mandatedSections };
 }
