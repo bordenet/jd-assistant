@@ -8,6 +8,7 @@ import { validateDocument, getScoreColor, getScoreLabel } from '../../validator/
 import { createProject } from './projects.js';
 import { navigateTo } from './router.js';
 import { showToast } from './ui.js';
+import { extractJobDescriptionFields } from './jd-extractor.js';
 
 const DOC_TYPE = 'Job Description';
 const DOC_TYPE_SHORT = 'JD';
@@ -184,11 +185,50 @@ export function showImportModal() {
     try {
       const markdown = previewArea.value;
       if (!markdown.trim()) { showToast('No content to save', 'error'); return; }
-      const title = extractTitleFromMarkdown(markdown) || `Imported ${DOC_TYPE_SHORT}`;
-      const project = await createProject({ title, problems: `(Imported from existing ${DOC_TYPE_SHORT})`, context: `(Imported from existing ${DOC_TYPE_SHORT})` });
+
+      // Extract structured fields from the imported markdown
+      const extracted = extractJobDescriptionFields(markdown);
+
+      // Build project data with extracted fields
+      // Fallback to legacy title extraction if extractor didn't find a title
+      const title = extracted.jobTitle || extractTitleFromMarkdown(markdown) || `Imported ${DOC_TYPE_SHORT}`;
+
+      const projectData = {
+        title,
+        jobTitle: extracted.jobTitle || '',
+        companyName: extracted.companyName || '',
+        roleLevel: extracted.roleLevel || '',
+        location: extracted.location || '',
+        responsibilities: extracted.responsibilities || '',
+        requiredQualifications: extracted.requiredQualifications || '',
+        preferredQualifications: extracted.preferredQualifications || '',
+        compensationRange: extracted.compensationRange || '',
+        benefits: extracted.benefits || '',
+        techStack: extracted.techStack || '',
+        // Context fields for Phase 1 prompt
+        problems: extracted.roleOverview || `(Imported from existing ${DOC_TYPE_SHORT})`,
+        context: extracted.aboutCompany || `(Imported from existing ${DOC_TYPE_SHORT})`
+      };
+
+      const project = await createProject(projectData);
       if (!project || !project.id) { showToast('Failed to create project', 'error'); return; }
+
+      // Store original markdown and mark as imported
       const { updateProject } = await import('./projects.js');
-      await updateProject(project.id, { phases: { ...project.phases, 1: { ...project.phases[1], response: markdown, completed: false, startedAt: new Date().toISOString() } }, importedContent: markdown, isImported: true });
+      await updateProject(project.id, {
+        phases: {
+          ...project.phases,
+          1: {
+            ...project.phases[1],
+            response: markdown,
+            completed: false,
+            startedAt: new Date().toISOString()
+          }
+        },
+        importedContent: markdown,
+        isImported: true
+      });
+
       closeModal();
       showToast(`${DOC_TYPE_SHORT} imported! Review and refine in Phase 1.`, 'success');
       navigateTo('project/' + project.id);
