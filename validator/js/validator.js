@@ -288,7 +288,7 @@ export function detectEncouragement(text) {
       has60to70 && '60-70% threshold mentioned',
       hasMeetMost && 'Meet most requirements language',
       hasEncourageApply && 'Encourage to apply language',
-      hasDontMeetAll && "Don't meet all qualifications language"
+      hasDontMeetAll && 'Don\'t meet all qualifications language'
     ].filter(Boolean)
   };
 }
@@ -636,8 +636,46 @@ export function validateDocument(text, postingType = 'external') {
   // Floor score at 0
   score = Math.max(0, score);
 
+  // Category breakdowns for UI display (used by project-view.js)
+  // Each category has a 25-point max, matching the old jd-validator.js API
+  const lengthDeduction = wordCountResult.penalty;
+  const masculineDeduction = masculineResult.penalty;
+  const extrovertDeduction = extrovertResult.penalty;
+  const redFlagDeduction = redFlagResult.penalty;
+  const slopDeduction = slopResult.penalty;
+  const compensationDeduction = compensationResult.penalty;
+  const encouragementDeduction = encouragementResult.penalty;
+
+  // Calculate raw category scores
+  const rawLength = 25 - Math.min(25, lengthDeduction);
+  const rawInclusivity = Math.max(0, 25 - masculineDeduction - extrovertDeduction);
+  const rawCulture = Math.max(0, 25 - redFlagDeduction - slopDeduction);
+  const rawTransparency = Math.max(0, 25 - compensationDeduction - encouragementDeduction);
+
+  // Build category issues arrays
+  const wordCount = wordCountResult.wordCount;
+  const lengthIssues = lengthDeduction > 0
+    ? (wordCount < 400 ? [`Short (${wordCount} words)`] : [`Long (${wordCount} words)`])
+    : [];
+
+  const inclusivityIssues = [
+    ...jdValidation.warnings.filter(w => w.type === 'masculine-coded').map(w => `Masculine-coded: "${w.word}"`),
+    ...jdValidation.warnings.filter(w => w.type === 'extrovert-bias').map(w => `Extrovert-bias: "${w.phrase}"`)
+  ];
+
+  const cultureIssues = [
+    ...jdValidation.warnings.filter(w => w.type === 'red-flag').map(w => `Red flag: "${w.phrase}"`),
+    ...(slopDeduction > 0 ? [`AI patterns detected (-${slopDeduction})`] : [])
+  ];
+
+  const transparencyIssues = [
+    ...(compensationDeduction > 0 ? ['No compensation range'] : []),
+    ...(encouragementDeduction > 0 ? ['Missing encouragement statement'] : [])
+  ];
+
   return {
     score,
+    totalScore: score, // Alias for backward compatibility with project-view.js
     grade: getGrade(score),
     feedback,
     deductions,
@@ -649,6 +687,27 @@ export function validateDocument(text, postingType = 'external') {
       ...slopResult.slopPenalty,
       deduction: slopResult.penalty,
       issues: slopResult.issues
+    },
+    // Category breakdowns for inline quality score display
+    length: {
+      score: rawLength,
+      maxScore: 25,
+      issues: lengthIssues
+    },
+    inclusivity: {
+      score: rawInclusivity,
+      maxScore: 25,
+      issues: inclusivityIssues
+    },
+    culture: {
+      score: rawCulture,
+      maxScore: 25,
+      issues: cultureIssues
+    },
+    transparency: {
+      score: rawTransparency,
+      maxScore: 25,
+      issues: transparencyIssues
     }
   };
 }

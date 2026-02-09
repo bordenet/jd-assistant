@@ -143,6 +143,83 @@ describe('Smoke Test - App Initialization', () => {
     });
   });
 
+  /**
+   * API CONTRACT TESTS
+   *
+   * These tests verify that validateDocument() returns the structure that project-view.js expects.
+   * This catches regressions where the validator API signature is unchanged but the return value
+   * structure changes - a gap that export consistency tests (above) cannot detect.
+   *
+   * BUG FIX (2026-02-09): Commit 15c51f3 broke jd-assistant because the new validator
+   * was missing category breakdown properties (length, inclusivity, culture, transparency)
+   * that project-view.js was iterating over. The smoke tests passed because the function
+   * existed, but the return value structure was wrong.
+   */
+  describe('API Contract - validateDocument returns structure project-view.js expects', () => {
+    let validator;
+    let result;
+
+    beforeAll(async () => {
+      validator = await import('../../validator/js/validator.js');
+      // Use minimal valid JD content to get a result
+      result = validator.validateDocument(`# Test Job
+## Responsibilities
+- Build things
+## Requirements
+- 3+ years experience`);
+    });
+
+    test('returns score property (number)', () => {
+      expect(result.score).toBeDefined();
+      expect(typeof result.score).toBe('number');
+    });
+
+    test('returns totalScore property (alias for score, used by project-view.js)', () => {
+      expect(result.totalScore).toBeDefined();
+      expect(typeof result.totalScore).toBe('number');
+      expect(result.totalScore).toBe(result.score);
+    });
+
+    test('returns grade property', () => {
+      expect(result.grade).toBeDefined();
+      expect(typeof result.grade).toBe('string');
+    });
+
+    // These category breakdown tests would have caught the 2026-02-09 regression
+    // project-view.js line 200: ...validationResult.length.issues
+    test('returns length category breakdown with issues array', () => {
+      expect(result.length).toBeDefined();
+      expect(result.length).toHaveProperty('score');
+      expect(result.length).toHaveProperty('maxScore');
+      expect(result.length).toHaveProperty('issues');
+      expect(Array.isArray(result.length.issues)).toBe(true);
+    });
+
+    test('returns inclusivity category breakdown with issues array', () => {
+      expect(result.inclusivity).toBeDefined();
+      expect(result.inclusivity).toHaveProperty('score');
+      expect(result.inclusivity).toHaveProperty('maxScore');
+      expect(result.inclusivity).toHaveProperty('issues');
+      expect(Array.isArray(result.inclusivity.issues)).toBe(true);
+    });
+
+    test('returns culture category breakdown with issues array', () => {
+      expect(result.culture).toBeDefined();
+      expect(result.culture).toHaveProperty('score');
+      expect(result.culture).toHaveProperty('maxScore');
+      expect(result.culture).toHaveProperty('issues');
+      expect(Array.isArray(result.culture.issues)).toBe(true);
+    });
+
+    test('returns transparency category breakdown with issues array', () => {
+      expect(result.transparency).toBeDefined();
+      expect(result.transparency).toHaveProperty('score');
+      expect(result.transparency).toHaveProperty('maxScore');
+      expect(result.transparency).toHaveProperty('issues');
+      expect(Array.isArray(result.transparency.issues)).toBe(true);
+    });
+  });
+
   describe('Single Source of Truth - No Duplicate Validator', () => {
     test('validator-inline.js should NOT exist in shared/js', async () => {
       const fs = await import('fs');
