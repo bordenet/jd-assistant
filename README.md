@@ -1,12 +1,14 @@
 # JD Assistant
 
-> ⚠️ **Deprecation Notice**: This repository is deprecated in favor of [DocForge AI](https://github.com/bordenet/docforge-ai), which consolidates all genesis-derived assistants into a single project. This repo will be archived on **March 1, 2026**.
+> 🗄️ **ARCHIVED**: This repository has been archived. All pages now **redirect to [DocForge AI](https://bordenet.github.io/docforge-ai/)**, which consolidates all genesis-derived assistants into a single unified platform.
+>
+> **New location**: https://bordenet.github.io/docforge-ai/
 
 Write inclusive job descriptions for software engineering positions. Three phases: draft, review, refine.
 
 [![Star this repo](https://img.shields.io/github/stars/bordenet/jd-assistant?style=social)](https://github.com/bordenet/jd-assistant)
 
-**Try it**: [Assistant](https://bordenet.github.io/jd-assistant/) · [Validator](https://bordenet.github.io/jd-assistant/validator/)
+**⚠️ Redirects to DocForge AI**: [Assistant](https://bordenet.github.io/jd-assistant/) · [Validator](https://bordenet.github.io/jd-assistant/validator/)
 
 > **Why this matters**: Research shows masculine-coded language in job descriptions reduces female applicants by up to 50%. This tool helps you write JDs that attract diverse candidates by flagging problematic language and suggesting inclusive alternatives.
 
